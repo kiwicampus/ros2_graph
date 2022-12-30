@@ -6,7 +6,7 @@ with open('README.rts') as readme:
 
 setuptools.setup(
     name="ros2_graphs_mermaid",
-    version="0.0.1",
+    version="1.0.0",
     url='https://github.com/kiwicampus/ros2_graphs_mermaid',
     description="Generate mermaid description of ROS2 graphs to add on your markdown files.",
     long_description=long_description,

@@ -55,7 +55,7 @@ flowchart LR
 /turtlesim o-.-o /turtle1/teleport_absolute[//turtle1/teleport_absolute<br>turtlesim/srv/TeleportAbsolute\]:::bugged
 /turtlesim o-.-o /turtle1/teleport_relative[//turtle1/teleport_relative<br>turtlesim/srv/TeleportRelative\]:::bugged
 /turtle1/rotate_absolute{{/turtle1/rotate_absolute<br>turtlesim/action/RotateAbsolute}}:::action o==o /turtlesim
-/turtle1/rotate_absolute o==o /teleop_turtle:::node
+/teleop_turtle:::node <==> /turtle1/rotate_absolute
 /turtlesim:::main_node
 
 subgraph keys[<b>Keys<b/>]

@@ -294,7 +294,7 @@ def mermaid_actions(
             action_node += f" o==o {node}"
             mermaid_action_description.append(action_node)
             mermaid_action_description.extend(
-                [f"{action} o==o {node}:::node" for node in action_info["nodes"]]
+                [f"{node}:::node <==> {action}" for node in action_info["nodes"]]
             )
     return mermaid_action_description, links_count
 
