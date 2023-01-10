@@ -46,10 +46,7 @@ def get_clean_lines(query_instruction: str) -> list:
     @return list lines
     """
     line_list = (
-        subprocess.check_output(
-            query_instruction,
-            shell=True,
-        )
+        subprocess.check_output(query_instruction, shell=True)
         .decode("utf-8")
         .splitlines()
     )
@@ -208,7 +205,7 @@ def get_action_info(actions: map, clients: bool):
     for action in actions_names:
         actions_and_nodes[action]["nodes"] = tuple(
             get_clean_lines(
-                f"ros2 action info {action} >> {aux_file} && {filter_command} && rm {aux_file}",
+                f"ros2 action info {action} >> {aux_file} && {filter_command} && rm {aux_file}"
             )
         )
 
@@ -306,15 +303,9 @@ def get_node_graph(node, links_count):
         "action_client": ("Action Clients:",),
     }
 
-    subprocess.check_output(
-        f"ros2 node info {node} >> node_info.txt",
-        shell=True,
-    )
+    subprocess.check_output(f"ros2 node info {node} >> node_info.txt", shell=True)
     elements = {k: get_node_info_block(pattern) for k, pattern in patterns.items()}
-    subprocess.check_output(
-        "rm node_info.txt",
-        shell=True,
-    )
+    subprocess.check_output("rm node_info.txt", shell=True)
     action_clients = get_action_info(elements["action_servers"], True)
     action_servers = get_action_info(elements["action_client"], False)
 
@@ -365,4 +356,3 @@ def get_node_graph(node, links_count):
     action_links = list(range(start_action_links, links_count))
 
     return mermaid_graph_description, action_links, links_count
-

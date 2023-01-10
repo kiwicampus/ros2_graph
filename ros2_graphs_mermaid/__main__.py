@@ -1,14 +1,28 @@
-
 import sys
 from functools import reduce
 
 from .graph_generator import get_node_graph
 
-def main(nodes: list):
-    heading = "\n```mermaid\nflowchart LR\n"
 
-    if not isinstance(nodes, list):
-        nodes = [nodes]
+def manage_flags(args: list):
+    if not isinstance(args, list):
+        args = [args]
+
+    try:
+        index_file = args.index("-o")
+        args.pop(index_file)  # remove -o flag
+        out_file = args.pop(index_file)
+        out_type = 1
+
+    except:
+        out_file = "diagram.mmd"
+        out_type = 0
+
+    return args, out_type, out_file
+
+
+def main(nodes: list):
+    nodes, out_type, out_file = manage_flags(nodes)
 
     nodes_description = []
     action_links = []
@@ -25,24 +39,31 @@ def main(nodes: list):
     nodes_description = "\n".join(no_duplicates)
     main_nodes_style = reduce(lambda a, node: a + f"{node}:::main_node\n", nodes, "")
 
-    mermaid_convention = [
-        "subgraph keys[<b>Keys<b/>]",
-        "subgraph nodes[<b><b/>]",
-        "topicb((No connected)):::bugged",
-        "main_node:::main_node",
-        "end",
-        "subgraph connection[<b><b/>]",
-        "node1:::node",
-        "node2:::node",
-        "node1 o-. to server .-o service[/Service<br>service/Type\]:::service",
-        "service <-. to client .-> node2",
-        "node1 -- publish --> topic([Topic<br>topic/Type]):::topic",
-        "topic -- subscribe --> node2",
-        "node1 o== to server ==o action{{/Action<br>action/Type/}}:::action",
-        "action <== to client ==> node2",
-        "end",
-        "end",
-    ]
+    mermaid_convention = "\n".join(
+        [
+            "subgraph keys[<b>Keys<b/>]",
+            "subgraph nodes[<b><b/>]",
+            "topicb((No connected)):::bugged",
+            "main_node:::main_node",
+            "end",
+            "subgraph connection[<b><b/>]",
+            "node1:::node",
+            "node2:::node",
+            "node1 o-. to server .-o service[/Service<br>service/Type\]:::service",
+            "service <-. to client .-> node2",
+            "node1 -- publish --> topic([Topic<br>topic/Type]):::topic",
+            "topic -- subscribe --> node2",
+            "node1 o== to server ==o action{{/Action<br>action/Type/}}:::action",
+            "action <== to client ==> node2",
+            "end",
+            "end",
+        ]
+    )
+
+    action_links.extend([links_count + 4, links_count + 5])
+    action_links_style = (
+        "linkStyle " + ",".join(map(str, action_links)) + " fill:none,stroke:green;"
+    )
 
     mermaid_style = [
         "classDef node opacity:0.9,fill:#2A0,stroke:#391,stroke-width:4px,color:#fff",
@@ -55,19 +76,30 @@ def main(nodes: list):
         "style nodes opacity:0.15,fill:#FFF",
         "style connection opacity:0.15,fill:#FFF",
     ]
-
-    action_links.extend([links_count + 4, links_count + 5])
-    action_links_style = (
-        "linkStyle " + ",".join(map(str, action_links)) + " fill:none,stroke:green;"
-    )
     mermaid_style.append(action_links_style)
 
-    print(heading)
-    print(nodes_description)
-    print(main_nodes_style)
-    print("\n".join(mermaid_convention))
-    print("\n".join(mermaid_style))
-    print("```\n")
+    mermaid_style = "\n".join(mermaid_style)
+
+    heading = "flowchart LR\n"
+
+    mermaid_graph = "\n".join(
+        [
+            heading,
+            nodes_description,
+            main_nodes_style,
+            mermaid_convention,
+            mermaid_style,
+        ]
+    )
+
+    if out_type:
+        with open(out_file, "a") as file:
+            file.write(mermaid_graph)
+    else:
+
+        print("\n```mermaid")
+        print(mermaid_graph)
+        print("```\n")
 
 
 if __name__ == "__main__":
