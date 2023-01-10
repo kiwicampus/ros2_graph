@@ -1,7 +1,15 @@
 # ros2_graphs_mermaid
 Generate mermaid description of ROS2 graphs to add on your markdown files.
 
-## Instalation
+## Motivation
+
+In order to have better architecture documentation, graphs of nodes and topics are needed but we can be honest non-body wants to maintain these graphs, and less do it from scratch. A tool that does it automatedly is required. The first alternative is rqt-graph but this one does not include services information and adds some non-required information when we filter by a node. It requires connecting to a bot to launch the rqt-graph save an image and upload it to the cloud to include it in the documentation.
+
+To make our life easier and to generate graphs that include all the information that we want this tool was created, 
+
+## Installation
+you need to have already installed ROS2 (tested on humble distro).
+
 ```
 pip install ros2-graphs-mermaid
 ```
@@ -39,7 +47,9 @@ python3 -m ros2_graphs_mermaid /turtlesim /teleop_turtle
 
 See an example graph:
 
-```mermaid
+![](images/turtle_graph.png)
+
+```
 flowchart LR
 
 /turtle1/cmd_vel([/turtle1/cmd_vel<br>geometry_msgs/msg/Twist]):::topic --> /turtlesim
