@@ -1,8 +1,13 @@
 import subprocess
 from functools import reduce, partial
+from typing import List, Tuple, Dict
 import rclpy
 from rclpy.node import Node
 
+
+ElementNameTypes = Tuple[str, List[str]]
+RelatedNodes = Dict[str, List[str]]
+ElementRelatedNodes = Dict[str, RelatedNodes]
 
 rclpy.init()
 dummy = Node("Graph_generator")
@@ -38,7 +43,7 @@ def after_pattern(pattern: str, file: str) -> str:
     return instruction
 
 
-def get_clean_lines(query_instruction: str) -> list:
+def get_clean_lines(query_instruction: str) -> List[str]:
     """! Perform a shell instruction and return the answer as a list of string
 
     @param query_instruction (str) ros2 cli query plus sed or grep filter instruction
@@ -51,10 +56,10 @@ def get_clean_lines(query_instruction: str) -> list:
         .splitlines()
     )
 
-    return filter(lambda x: x != "", line_list)
+    return list(filter(lambda x: x != "", line_list))
 
 
-def get_node_info_block(pattern: tuple, file_name: str) -> tuple:
+def get_node_info_block(pattern: tuple, file_name: str) -> Tuple[Tuple[str, str]]:
     """! Get the name and the type of the ros elements in an ros2 node info block 
     @param pattern: tuple of strings, marks that indicate the start and the end of that block
     @param file_name: File where is stored the ros node info response
@@ -82,7 +87,7 @@ def join_name_and_namespace(name: str, namespace: str = None) -> str:
     return namespace + name
 
 
-def is_not_exclude(element: tuple, exclude: list) -> bool:
+def is_not_exclude(element: Tuple[str, str], exclude: List[str]) -> bool:
     """! Check if an elment is desired
     @param element (name, type) tuple
     @param exclude not desired elemts names list
@@ -93,7 +98,7 @@ def is_not_exclude(element: tuple, exclude: list) -> bool:
     return True
 
 
-def filter_topics(topic: tuple) -> bool:
+def filter_topics(topic: Tuple[str, str]) -> bool:
     """! To filter undesired topics
     @param topic tuple(name, type)
     @return False if the topic is not desired
@@ -115,7 +120,9 @@ def filter_topics(topic: tuple) -> bool:
     return is_not_exclude(topic, exclude_fracment)
 
 
-def get_topics_info(topics: list, subscribers: bool) -> dict:
+def get_topics_info(
+    topics: List[ElementNameTypes], subscribers: bool
+) -> ElementRelatedNodes:
     """!
     Get publishers or subcribers nodes from nodes names
 
@@ -146,7 +153,9 @@ def get_topics_info(topics: list, subscribers: bool) -> dict:
     return topics_and_nodes
 
 
-def get_services_info(services: list, clients: bool) -> dict:
+def get_services_info(
+    services: List[ElementNameTypes], clients: bool
+) -> ElementRelatedNodes:
     """! Filter avalible services
     @param services list of tuple(name: str, types: list)
     @param clients, True for get clients names, false for server names
@@ -195,7 +204,9 @@ def get_services_info(services: list, clients: bool) -> dict:
     return services_and_nodes
 
 
-def get_actions_info(actions: tuple, clients: bool) -> dict:
+def get_actions_info(
+    actions: Tuple[ElementNameTypes], clients: bool
+) -> ElementRelatedNodes:
     """!
     Get publishers or subcribers nodes from nodes names
 
@@ -227,7 +238,9 @@ def get_actions_info(actions: tuple, clients: bool) -> dict:
     return actions_and_nodes
 
 
-def mermaid_topics(node: str, topics: dict, subscribers: bool) -> tuple:
+def mermaid_topics(
+    node: str, topics: ElementRelatedNodes, subscribers: bool
+) -> Tuple[str, int]:
     """!
     @param node, main node name
     @param topics, {topic_name: {type: str, nodes: [nodes_names]}} dictionary
@@ -239,7 +252,7 @@ def mermaid_topics(node: str, topics: dict, subscribers: bool) -> tuple:
     mermaid_topic_description = []
     links_count = 0
     for topic, topic_info in topics.items():
-        print(topic_info['type'])
+        print(topic_info["type"])
         n_publishers = len(topic_info["nodes"])
         links_count += 1 + n_publishers
 
@@ -263,7 +276,9 @@ def mermaid_topics(node: str, topics: dict, subscribers: bool) -> tuple:
     return mermaid_topic_description, links_count
 
 
-def mermaid_services(node: str, services: dict, clients: bool) -> tuple:
+def mermaid_services(
+    node: str, services: ElementRelatedNodes, clients: bool
+) -> Tuple[str, int]:
     """!
     @param node, main node name
     @param services, {service_name: {type: str, nodes: [nodes_names]}} dictionary
@@ -297,7 +312,9 @@ def mermaid_services(node: str, services: dict, clients: bool) -> tuple:
     return mermaid_service_description, links_count
 
 
-def mermaid_actions(node: str, actions: dict, clients: bool) -> tuple:
+def mermaid_actions(
+    node: str, actions: ElementRelatedNodes, clients: bool
+) -> Tuple[str, int]:
     """!
     @param node, main node name
     @param actions, {action_name: {type: str, nodes: [nodes_names]}} dictionary
