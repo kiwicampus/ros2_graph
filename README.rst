@@ -22,15 +22,15 @@ run the script:
 
    python3 -m ros2_graphs_mermaid your_node
 
+This will print in the console a graph description in the mermaid
+language, then you have to copy and paste it on the node’s readme and
+enjoy. But if you want export it to a file use the `-o` flag.
+
 Example
 
 ::
 
    python3 -m ros2_graphs_mermaid /turtlesim
-
-This will print in the console a graph description in the mermaid
-language, then you have to copy and paste it on the node’s readme and
-enjoy.
 
 **Note:** you must copy everything between *\```mermaid* and *\``\`*
 including both marks.

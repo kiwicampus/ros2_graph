@@ -1,28 +1,40 @@
 import sys
+from typing import List, Dict
 from functools import reduce
 
 from .graph_generator import get_node_graph
 
 
-def manage_flags(args: list):
+def manage_flags(args: List[str]) -> dict:
+    """! Manage input flags
+        @param args console input line
+        @return dictionary with he nodes names and the parameters
+    """
+
+    args_processed = {"nodes": [], "out_file": "diagram.mmd", "out_type": 0}
+
     if not isinstance(args, list):
         args = [args]
 
     try:
         index_file = args.index("-o")
         args.pop(index_file)  # remove -o flag
-        out_file = args.pop(index_file)
-        out_type = 1
+        args_processed["out_file"] = args.pop(index_file)
+        args_processed["out_type"] = 1
 
     except:
-        out_file = "diagram.mmd"
-        out_type = 0
+        args_processed["out_type"] = 0
 
-    return args, out_type, out_file
+    args_processed["nodes"] = args
+
+    return args_processed
 
 
 def main(nodes: list):
-    nodes, out_type, out_file = manage_flags(nodes)
+    args_processed = manage_flags(nodes)
+    nodes = args_processed["nodes"]
+    out_type = args_processed["out_type"]
+    out_file = args_processed["out_file"]
 
     nodes_description = []
     action_links = []
