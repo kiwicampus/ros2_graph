@@ -13,7 +13,7 @@ rclpy.init()
 dummy = Node("Graph_generator")
 
 
-def between_patterns(pattern: tuple, file: str) -> str:
+def between_patterns(pattern: Tuple[str], file: str) -> str:
     """!
     Return sed instruction to get text between two patters
     @param pattern (tuple) size two tuple with both patterns
