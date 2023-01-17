@@ -8,7 +8,7 @@ In order to have better architecture documentation, graphs of nodes and topics a
 To make our life easier and to generate graphs that include all the information that we want this tool was created
 
 ## Installation
-you need to have already installed ROS2 (tested on humble distro).
+You need to have already installed ROS2 (tested on humble distro).
 
 ```
 pip install ros2-graphs-mermaid
