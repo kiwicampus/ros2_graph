@@ -3,9 +3,9 @@ Generate mermaid description of ROS2 graphs to add on your markdown files.
 
 ## Motivation
 
-In order to have better architecture documentation, graphs of nodes and topics are needed but we can be honest non-body wants to maintain these graphs, and less do it from scratch. A tool that does it automatedly is required. The first alternative is rqt-graph but this one does not include services information and adds some non-required information when we filter by a node. It requires connecting to a bot to launch the rqt-graph save an image and upload it to the cloud to include it in the documentation.
+In order to have better architecture documentation, graphs of nodes and topics are needed. Nonetheless, nobody wants to maintain these graphs and even do it from scratch.  Because of that, a tool that does it automatedly is required. The first alternative is [rqt-graph](http://wiki.ros.org/rqt_graph) but it does not include services/actions information and adds some non-required information when we filter by a node. Normally the workflow includes connecting to a terminal where the ros system is running, launching the `rqt-graph`, saving the resulting image, and uploading it to the cloud to include it in the documentation.
 
-To make our life easier and to generate graphs that include all the information that we want this tool was created, 
+To make our life easier and to generate graphs that include all the information that we want this tool was created
 
 ## Installation
 you need to have already installed ROS2 (tested on humble distro).
