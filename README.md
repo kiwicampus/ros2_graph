@@ -55,8 +55,7 @@ flowchart LR
 /turtle1/cmd_vel([/turtle1/cmd_vel<br>geometry_msgs/msg/Twist]):::topic --> /turtlesim
 /teleop_turtle:::node --> /turtle1/cmd_vel
 /turtlesim --> /turtle1/color_sensor([/turtle1/color_sensor<br>turtlesim/msg/Color]):::bugged
-/turtlesim --> /turtle1/pose([/turtle1/pose<br>turtlesim/msg/Pose]):::topic
-/turtle1/pose --> /_ros2cli_16136:::node
+/turtlesim --> /turtle1/pose([/turtle1/pose<br>turtlesim/msg/Pose]):::bugged
 /turtlesim o-.-o /clear[//clear<br>std_srvs/srv/Empty\]:::bugged
 /turtlesim o-.-o /kill[//kill<br>turtlesim/srv/Kill\]:::bugged
 /turtlesim o-.-o /reset[//reset<br>std_srvs/srv/Empty\]:::bugged
@@ -93,5 +92,5 @@ classDef bugged opacity:0.9,fill:#933,stroke:#800,stroke-width:2px,color:#fff
 style keys opacity:0.15,fill:#FFF
 style nodes opacity:0.15,fill:#FFF
 style connection opacity:0.15,fill:#FFF
-linkStyle 12,13,18,19 fill:none,stroke:green;
+linkStyle 11,12,17,18 fill:none,stroke:green;
 ```

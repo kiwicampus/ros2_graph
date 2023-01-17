@@ -87,12 +87,12 @@ def join_name_and_namespace(name: str, namespace: str = None) -> str:
     return namespace + name
 
 
-def is_not_exclude(element: Tuple[str, str], exclude: List[str]) -> bool:
-    """! Check if an elment is desired
+def is_not_in_blacklist(element: Tuple[str, str], blacklist: List[str]) -> bool:
+    """! Return true if the element name do not contains a fragment in the balcklist
     @param element (name, type) tuple
     @param exclude not desired elemts names list
     """
-    for e in exclude:
+    for e in blacklist:
         if e in element[0]:
             return False
     return True
@@ -112,19 +112,19 @@ def filter_topics(topic: Tuple[str, str]) -> bool:
         "",
     )
 
-    exclude_fracment = ("/transition_event", "/_action")
+    blacklist = ("/transition_event", "/_action")
 
     if topic[0] in exclude:
         return False
 
-    return is_not_exclude(topic, exclude_fracment)
+    return is_not_in_blacklist(topic, blacklist)
 
 
-def get_topics_info(
+def get_topics_related_nodes(
     topics: List[ElementNameTypes], subscribers: bool
 ) -> ElementRelatedNodes:
     """!
-    Get publishers or subcribers nodes from nodes names
+    Get publishers or subcribers nodes for the specified topics
 
     @param topics (list[tuple(name, types list)]) List of topics with names and type
     @param publishers (bool) get publishers or subscribers nodes
@@ -153,16 +153,16 @@ def get_topics_info(
     return topics_and_nodes
 
 
-def get_services_info(
+def get_services_related_nodes(
     services: List[ElementNameTypes], clients: bool
 ) -> ElementRelatedNodes:
-    """! Filter avalible services
+    """! Get servers or clients nodes for the specified services
     @param services list of tuple(name: str, types: list)
     @param clients, True for get clients names, false for server names
     @return dictonary with structure {service_name: {"type": type, "nodes": client or server nodes names list}}
     """
 
-    exclude = (
+    blacklist = (
         "/change_state",
         "/describe_parameters",
         "/get_available_states",
@@ -176,7 +176,7 @@ def get_services_info(
         "/set_parameters_atomically",
         "/_action",
     )
-    filter_services = partial(is_not_exclude, exclude=exclude)
+    filter_services = partial(is_not_in_blacklist, blacklist=blacklist)
     services_and_nodes = {
         service[0]: {"type": "<br>".join(service[1]), "nodes": []}
         for service in filter(filter_services, services)
@@ -204,11 +204,11 @@ def get_services_info(
     return services_and_nodes
 
 
-def get_actions_info(
+def get_actions_related_nodes(
     actions: Tuple[ElementNameTypes], clients: bool
 ) -> ElementRelatedNodes:
     """!
-    Get publishers or subcribers nodes from nodes names
+    Get clients or servers nodes for the specified action
 
     @param actions  tuples of tuples(name, type) 
     @param clients  get client or server nodes
@@ -241,7 +241,7 @@ def get_actions_info(
 def mermaid_topics(
     node: str, topics: ElementRelatedNodes, subscribers: bool
 ) -> Tuple[str, int]:
-    """!
+    """! Construct the mermaid description to add topics to the graph
     @param node, main node name
     @param topics, {topic_name: {type: str, nodes: [nodes_names]}} dictionary
     @param subscribers, link subscribers or publishers nodes 
@@ -279,7 +279,7 @@ def mermaid_topics(
 def mermaid_services(
     node: str, services: ElementRelatedNodes, clients: bool
 ) -> Tuple[str, int]:
-    """!
+    """! Construct the mermaid description to add services to the graph
     @param node, main node name
     @param services, {service_name: {type: str, nodes: [nodes_names]}} dictionary
     @param clients, link clients or servers nodes 
@@ -315,7 +315,7 @@ def mermaid_services(
 def mermaid_actions(
     node: str, actions: ElementRelatedNodes, clients: bool
 ) -> Tuple[str, int]:
-    """!
+    """! Construct the mermaid description to add actions to the graph
     @param node, main node name
     @param actions, {action_name: {type: str, nodes: [nodes_names]}} dictionary
     @param subscribers, link clients or servers nodes 
@@ -364,8 +364,8 @@ def get_node_graph(node, links_count):
         for k, pattern in patterns.items()
     }
     subprocess.check_output("rm node_info.txt", shell=True)
-    action_clients = get_actions_info(elements["action_servers"], clients=True)
-    action_servers = get_actions_info(elements["action_client"], clients=False)
+    action_clients = get_actions_related_nodes(elements["action_servers"], clients=True)
+    action_servers = get_actions_related_nodes(elements["action_client"], clients=False)
 
     namespace_name = node.split("/")
     name = namespace_name[-1]
@@ -379,10 +379,10 @@ def get_node_graph(node, links_count):
     services_server = dummy.get_service_names_and_types_by_node(*name_and_namespace)
     services_client = dummy.get_client_names_and_types_by_node(*name_and_namespace)
 
-    topics_subscribers = get_topics_info(subscribers, subscribers=True)
-    topics_publishers = get_topics_info(publishers, subscribers=False)
-    service_clients = get_services_info(services_server, clients=True)
-    service_servers = get_services_info(services_client, clients=False)
+    topics_subscribers = get_topics_related_nodes(subscribers, subscribers=True)
+    topics_publishers = get_topics_related_nodes(publishers, subscribers=False)
+    service_clients = get_services_related_nodes(services_server, clients=True)
+    service_servers = get_services_related_nodes(services_client, clients=False)
 
     mermaid_graph_description, links_count_subs = mermaid_topics(
         node, topics_subscribers, subscribers=True
