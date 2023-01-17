@@ -14,7 +14,7 @@ To make our life easier and to generate graphs that include all the information 
 Installation
 ------------
 
-you need to have already installed ROS2 (tested on humble distro).
+You need to have already installed ROS2 (tested on humble distro).
 
 ::
 
