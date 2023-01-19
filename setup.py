@@ -1,6 +1,6 @@
 import setuptools
 from pip._internal.req import parse_requirements
-from ros2_graphs_mermaid import __version__
+from ros2_graph import __version__
 
 with open("README.rst") as readme:
     long_description = readme.read()
@@ -13,11 +13,11 @@ except:
     requirements = [str(ir.requirement) for ir in install_reqs]
 
 setuptools.setup(
-    name="ros2_graphs_mermaid",
+    name="ros2_graph",
     version=__version__,
     url="https://github.com/kiwicampus/ros2_graphs_mermaid",
     description="Generate mermaid description of ROS2 graphs to add on your markdown files.",
     long_description=long_description,
-    packages=["ros2_graphs_mermaid"],
+    packages=["ros2_graph"],
     install_requires=requirements,
 )
