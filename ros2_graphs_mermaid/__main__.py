@@ -1,8 +1,8 @@
-
 import sys
 from functools import reduce
 
 from .graph_generator import get_node_graph
+
 
 def main(nodes: list):
     heading = "\n```mermaid\nflowchart LR\n"

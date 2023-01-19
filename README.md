@@ -1,7 +1,15 @@
 # ros2_graphs_mermaid
 Generate mermaid description of ROS2 graphs to add on your markdown files.
 
-## Instalation
+## Motivation
+
+In order to have better architecture documentation, graphs of nodes and topics are needed. Nonetheless, nobody wants to maintain these graphs and even do it from scratch.  Because of that, a tool that does it automatedly is required. The first alternative is [rqt-graph](http://wiki.ros.org/rqt_graph) but it does not include services/actions information and adds some non-required information when we filter by a node. Normally the workflow includes connecting to a terminal where the ros system is running, launching the `rqt-graph`, saving the resulting image, and uploading it to the cloud to include it in the documentation.
+
+To make our life easier and to generate graphs that include all the information that we want this tool was created
+
+## Installation
+You need to have already installed ROS2 (tested on humble distro).
+
 ```
 pip install ros2-graphs-mermaid
 ```
@@ -39,14 +47,15 @@ python3 -m ros2_graphs_mermaid /turtlesim /teleop_turtle
 
 See an example graph:
 
-```mermaid
+![](images/turtle_graph.png)
+
+```
 flowchart LR
 
 /turtle1/cmd_vel([/turtle1/cmd_vel<br>geometry_msgs/msg/Twist]):::topic --> /turtlesim
 /teleop_turtle:::node --> /turtle1/cmd_vel
 /turtlesim --> /turtle1/color_sensor([/turtle1/color_sensor<br>turtlesim/msg/Color]):::bugged
-/turtlesim --> /turtle1/pose([/turtle1/pose<br>turtlesim/msg/Pose]):::topic
-/turtle1/pose --> /_ros2cli_16136:::node
+/turtlesim --> /turtle1/pose([/turtle1/pose<br>turtlesim/msg/Pose]):::bugged
 /turtlesim o-.-o /clear[//clear<br>std_srvs/srv/Empty\]:::bugged
 /turtlesim o-.-o /kill[//kill<br>turtlesim/srv/Kill\]:::bugged
 /turtlesim o-.-o /reset[//reset<br>std_srvs/srv/Empty\]:::bugged
@@ -83,5 +92,5 @@ classDef bugged opacity:0.9,fill:#933,stroke:#800,stroke-width:2px,color:#fff
 style keys opacity:0.15,fill:#FFF
 style nodes opacity:0.15,fill:#FFF
 style connection opacity:0.15,fill:#FFF
-linkStyle 12,13,18,19 fill:none,stroke:green;
+linkStyle 11,12,17,18 fill:none,stroke:green;
 ```
