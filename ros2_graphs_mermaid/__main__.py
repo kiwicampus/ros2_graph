@@ -71,7 +71,8 @@ def main(nodes: list):
             "end",
         ]
     )
-
+    
+    # Add action links of conventions sub graph (the 4th and the 5th)
     action_links.extend([links_count + 4, links_count + 5])
     action_links_style = (
         "linkStyle " + ",".join(map(str, action_links)) + " fill:none,stroke:green;"
