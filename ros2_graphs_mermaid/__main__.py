@@ -1,40 +1,14 @@
 import sys
+import argparse
 from typing import List, Dict
 from functools import reduce
 
 from .graph_generator import get_node_graph
 
-
-def manage_flags(args: List[str]) -> dict:
-    """! Manage input flags
-        @param args console input line
-        @return dictionary with the nodes names and the parameters
-    """
-
-    args_processed = {"nodes": [], "out_file": "diagram.mmd", "out_type": 0}
-
-    if not isinstance(args, list):
-        args = [args]
-
-    try:
-        index_file = args.index("-o")
-        args.pop(index_file)  # remove -o flag
-        args_processed["out_file"] = args.pop(index_file)
-        args_processed["out_type"] = 1
-
-    except:
-        args_processed["out_type"] = 0
-
-    args_processed["nodes"] = args
-
-    return args_processed
-
-
-def main(nodes: list):
-    args_processed = manage_flags(nodes)
-    nodes = args_processed["nodes"]
-    out_type = args_processed["out_type"]
-    out_file = args_processed["out_file"]
+def main(args):
+    nodes = args.nodes
+    out_file = args.out_file
+    out_type = 0 if out_file == "None" else 1
 
     nodes_description = []
     action_links = []
@@ -71,7 +45,7 @@ def main(nodes: list):
             "end",
         ]
     )
-    
+
     # Add action links of conventions sub graph (the 4th and the 5th)
     action_links.extend([links_count + 4, links_count + 5])
     action_links_style = (
@@ -116,4 +90,19 @@ def main(nodes: list):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    parser = argparse.ArgumentParser(
+        description="Create mermaid graphs from your ros2 nodes"
+    )
+    parser.add_argument(
+        "nodes", metavar="/node", type=str, nargs="+", help="main nodes of your graph"
+    )
+    parser.add_argument(
+        "-o",
+        "--out_file",
+        dest="out_file",
+        help="set output file otherwise the graph will be printed on the console",
+        default="None",
+        type=str,
+    )
+    args = parser.parse_args()
+    main(args)

@@ -252,7 +252,6 @@ def mermaid_topics(
     mermaid_topic_description = []
     links_count = 0
     for topic, topic_info in topics.items():
-        print(topic_info["type"])
         n_publishers = len(topic_info["nodes"])
         links_count += 1 + n_publishers
 
