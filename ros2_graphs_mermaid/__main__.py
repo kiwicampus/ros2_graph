@@ -8,7 +8,7 @@ from .graph_generator import get_node_graph
 def manage_flags(args: List[str]) -> dict:
     """! Manage input flags
         @param args console input line
-        @return dictionary with he nodes names and the parameters
+        @return dictionary with the nodes names and the parameters
     """
 
     args_processed = {"nodes": [], "out_file": "diagram.mmd", "out_type": 0}

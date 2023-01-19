@@ -4,8 +4,17 @@ ros2_graphs_mermaid
 Generate mermaid description of ROS2 graphs to add on your markdown
 files.
 
-Instalation
------------
+Motivation
+----------
+
+In order to have better architecture documentation, graphs of nodes and topics are needed. Nonetheless, nobody wants to maintain these graphs and even do it from scratch.  Because of that, a tool that does it automatedly is required. The first alternative is rqt-graph but it does not include services/actions information and adds some non-required information when we filter by a node. Normally the workflow includes connecting to a terminal where the ros system is running, launching the rqt-graph, saving the resulting image, and uploading it to the cloud to include it in the documentation.
+
+To make our life easier and to generate graphs that include all the information that we want this tool was created
+
+Installation
+------------
+
+You need to have already installed ROS2 (tested on humble distro).
 
 ::
 
@@ -54,7 +63,9 @@ Example:
 
 See an example graph:
 
-.. code:: mermaid
+|image0|
+
+::
 
    flowchart LR
 
@@ -100,3 +111,6 @@ See an example graph:
    style nodes opacity:0.15,fill:#FFF
    style connection opacity:0.15,fill:#FFF
    linkStyle 12,13,18,19 fill:none,stroke:green;
+
+.. |image0| image:: images/turtle_graph.png
+
