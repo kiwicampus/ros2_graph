@@ -28,7 +28,7 @@ You need to have already installed ROS2 (tested on humble distro).
 
 ::
 
-   pip install ros2-graphs-mermaid
+   pip install ros2-graph
 
 How it works
 ------------
@@ -39,7 +39,7 @@ run the script:
 
 ::
 
-   python3 -m ros2_graph your_node
+   ros2_graph your_node
 
 This will print in the console a graph description in the mermaid
 language, then you have to copy and paste it on the node’s readme and
@@ -49,7 +49,7 @@ Example
 
 ::
 
-   python3 -m ros2_graph /turtlesim -o turtle_diagram.md
+   ros2_graph /turtlesim -o turtle_diagram.md
 
 **Note:** you must copy everything between *\```mermaid* and *\``\`*
 including both marks.
@@ -63,13 +63,13 @@ include all the nodes that you want:
 
 ::
 
-   python3 -m ros2_graph node_1 node_2 … node_n
+   ros2_graph node_1 node_2 … node_n
 
 Example:
 
 ::
 
-   python3 -m ros2_graph /turtlesim /teleop_turtle
+   ros2_graph /turtlesim /teleop_turtle
 
 See an example graph:
 
