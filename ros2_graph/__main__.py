@@ -97,7 +97,7 @@ def main():
 
     mermaid_style = "\n".join(mermaid_style)
 
-    heading = "flowchart LR\n"
+    heading = "\n```mermaid\nflowchart LR\n"
 
     mermaid_graph = "\n".join(
         [
@@ -106,6 +106,7 @@ def main():
             main_nodes_style,
             mermaid_convention,
             mermaid_style,
+            "```\n",
         ]
     )
 
@@ -113,10 +114,8 @@ def main():
         with open(out_file, "a") as file:
             file.write(mermaid_graph)
     else:
+            print(mermaid_graph)
 
-        print("\n```mermaid")
-        print(mermaid_graph)
-        print("```\n")
 
 
 if __name__ == "__main__":

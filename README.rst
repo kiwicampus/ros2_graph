@@ -121,5 +121,5 @@ See an example graph:
    style connection opacity:0.15,fill:#FFF
    linkStyle 11,12,17,18 fill:none,stroke:green;
 
-.. |image0| image:: images/turtle_graph.png
+.. |image0| image:: https://github.com/kiwicampus/ros2_graph/blob/main/images/turtle_graph.png
 
