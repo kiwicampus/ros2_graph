@@ -1,5 +1,6 @@
 import setuptools
 from pip._internal.req import parse_requirements
+
 from ros2_graph import __version__
 
 with open("README.rst") as readme:
