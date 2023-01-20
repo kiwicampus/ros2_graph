@@ -1,4 +1,4 @@
-# ros2_graphs_mermaid
+# ros2_graph
 Generate mermaid description of ROS2 graphs to add on your markdown files.
 
 ## Motivation
@@ -18,15 +18,17 @@ pip install ros2-graphs-mermaid
  Suppose you want to generate a graph that shows how a node it's relates to other nodes by topics, services, and actions. All you need to do is run the script:
 
 ```
-python3 -m ros2_graphs_mermaid your_node
+python3 -m ros2_graph your_node
 ```
+This will print in the console a graph description in the mermaid language, then you have to copy and paste it on the node's readme and enjoy. But if you want export it to a file use the `-o` flag.
+
 Example
 
 ```
-python3 -m ros2_graphs_mermaid /turtlesim
+python3 -m ros2_graph /turtlesim -o turtle_diagram.md
 ```
 
-This will print in the console a graph description in the mermaid language, then you have to copy and paste it on the node's readme and enjoy.
+
 
 **Note:** you must copy everything between *\`\`\`mermaid* and *\`\`\`* including both marks.
 
@@ -35,13 +37,13 @@ GitHub can display mermaid graphs. You can also display it on VS code by adding 
 But what about nodes highly correlated as the range sensors, it does not make sense to have a graph for each node, Well don't worry you can include all the nodes that you want:
 
 ```
-python3 -m ros2_graphs_mermaid node_1 node_2 … node_n
+python3 -m ros2_graph node_1 node_2 … node_n
 ```
 
 Example:
 
 ```
-python3 -m ros2_graphs_mermaid /turtlesim /teleop_turtle
+python3 -m ros2_graph /turtlesim /teleop_turtle
 ```
 
 
