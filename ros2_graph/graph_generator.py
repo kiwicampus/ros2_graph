@@ -1,9 +1,24 @@
+#! /usr/bin/env python3
+# Copyright 2023 Kiwicampus Inc.
+#
+# Licensed under GNU GENERAL PUBLIC, version 3 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.gnu.org/licenses/gpl-3.0.en.html
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import subprocess
-from functools import reduce, partial
-from typing import List, Tuple, Dict
+from functools import partial
+from typing import Dict, List, Tuple
+
 import rclpy
 from rclpy.node import Node
-
 
 ElementNameTypes = Tuple[str, List[str]]
 RelatedNodes = Dict[str, List[str]]
@@ -60,7 +75,7 @@ def get_clean_lines(query_instruction: str) -> List[str]:
 
 
 def get_node_info_block(pattern: tuple, file_name: str) -> Tuple[Tuple[str, str]]:
-    """! Get the name and the type of the ros elements in an ros2 node info block 
+    """! Get the name and the type of the ros elements in an ros2 node info block
     @param pattern: tuple of strings, marks that indicate the start and the end of that block
     @param file_name: File where is stored the ros node info response
     @return tuples (element, type)
@@ -210,7 +225,7 @@ def get_actions_related_nodes(
     """!
     Get clients or servers nodes for the specified action
 
-    @param actions  tuples of tuples(name, type) 
+    @param actions  tuples of tuples(name, type)
     @param clients  get client or server nodes
 
     @return dict {action_name: [nodes_names]}
@@ -244,10 +259,10 @@ def mermaid_topics(
     """! Construct the mermaid description to add topics to the graph
     @param node, main node name
     @param topics, {topic_name: {type: str, nodes: [nodes_names]}} dictionary
-    @param subscribers, link subscribers or publishers nodes 
+    @param subscribers, link subscribers or publishers nodes
 
     @return mermaid_topic_description list of lines with mermaid description for linked topics
-    @return links_count, number of links 
+    @return links_count, number of links
     """
     mermaid_topic_description = []
     links_count = 0
@@ -281,10 +296,10 @@ def mermaid_services(
     """! Construct the mermaid description to add services to the graph
     @param node, main node name
     @param services, {service_name: {type: str, nodes: [nodes_names]}} dictionary
-    @param clients, link clients or servers nodes 
+    @param clients, link clients or servers nodes
 
     @return mermaid_topic_description list of lines with mermaid description for linked services
-    @return links_count, number of links 
+    @return links_count, number of links
     """
     mermaid_service_description = []
     links_count = 0
@@ -317,10 +332,10 @@ def mermaid_actions(
     """! Construct the mermaid description to add actions to the graph
     @param node, main node name
     @param actions, {action_name: {type: str, nodes: [nodes_names]}} dictionary
-    @param subscribers, link clients or servers nodes 
+    @param subscribers, link clients or servers nodes
 
     @return mermaid_topic_description list of lines with mermaid description for linked actions
-    @return links_count, number of links 
+    @return links_count, number of links
     """
     mermaid_action_description = []
     links_count = 0

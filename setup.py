@@ -1,11 +1,12 @@
 import setuptools
 from pip._internal.req import parse_requirements
+
 from ros2_graph import __version__
 
 with open("README.rst") as readme:
     long_description = readme.read()
 
-install_reqs = list(parse_requirements("requirements.txt",session=False))
+install_reqs = list(parse_requirements("requirements.txt", session=False))
 
 try:
     requirements = [str(ir.req) for ir in install_reqs]
