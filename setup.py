@@ -6,7 +6,6 @@ from ros2_graph import __version__
 
 with open("README.md") as readme:
     lines = readme.readlines()
-    print(lines)
     start = lines.index("```mermaid\n")
     end = lines.index("```\n", start)
     lines = lines[:start] + ["![](https://github.com/kiwicampus/ros2_graph/raw/main/images/turtle_graph.png)\n"] + lines[end +1 :]
