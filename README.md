@@ -11,21 +11,21 @@ To make our life easier and to generate graphs that include all the information 
 You need to have already installed ROS2 (tested on humble distro).
 
 ```
-pip install ros2-graphs-mermaid
+pip install ros2-graph
 ```
 
 ## How it works
  Suppose you want to generate a graph that shows how a node it's relates to other nodes by topics, services, and actions. All you need to do is run the script:
 
 ```
-python3 -m ros2_graph your_node
+ros2_graph your_node
 ```
 This will print in the console a graph description in the mermaid language, then you have to copy and paste it on the node's readme and enjoy. But if you want export it to a file use the `-o` flag.
 
 Example
 
 ```
-python3 -m ros2_graph /turtlesim -o turtle_diagram.md
+ros2_graph /turtlesim -o turtle_diagram.md
 ```
 
 
@@ -37,13 +37,13 @@ GitHub can display mermaid graphs. You can also display it on VS code by adding 
 But what about nodes highly correlated as the range sensors, it does not make sense to have a graph for each node, Well don't worry you can include all the nodes that you want:
 
 ```
-python3 -m ros2_graph node_1 node_2 … node_n
+ros2_graph node_1 node_2 … node_n
 ```
 
 Example:
 
 ```
-python3 -m ros2_graph /turtlesim /teleop_turtle
+ros2_graph /turtlesim /teleop_turtle
 ```
 
 

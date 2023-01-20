@@ -21,4 +21,5 @@ setuptools.setup(
     long_description=long_description,
     packages=["ros2_graph"],
     install_requires=requirements,
+    entry_points={"console_scripts": ["ros2_graph = ros2_graph:__main__.main"]},
 )
