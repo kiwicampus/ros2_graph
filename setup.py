@@ -1,10 +1,16 @@
 import setuptools
+import re
 from pip._internal.req import parse_requirements
 
 from ros2_graph import __version__
 
 with open("README.md") as readme:
-    long_description = readme.read()
+    lines = readme.readlines()
+    print(lines)
+    start = lines.index("```mermaid\n")
+    end = lines.index("```\n", start)
+    lines = lines[:start] + ["![](https://github.com/kiwicampus/ros2_graph/raw/main/images/turtle_graph.png)\n"] + lines[end +1 :]
+    long_description = "".join(lines)
 
 install_reqs = list(parse_requirements("requirements.txt", session=False))
 
