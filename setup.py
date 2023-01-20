@@ -5,7 +5,7 @@ from ros2_graph import __version__
 with open("README.rst") as readme:
     long_description = readme.read()
 
-install_reqs = list(parse_requirements("requirements.txt",session=False))
+install_reqs = list(parse_requirements("requirements.txt", session=False))
 
 try:
     requirements = [str(ir.req) for ir in install_reqs]
@@ -20,4 +20,5 @@ setuptools.setup(
     long_description=long_description,
     packages=["ros2_graph"],
     install_requires=requirements,
+    entry_points={"console_scripts": ["ros2_graph = ros2_graph:__main__.main"]},
 )

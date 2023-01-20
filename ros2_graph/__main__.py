@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import sys
 import argparse
 from typing import List, Dict
@@ -5,7 +7,24 @@ from functools import reduce
 
 from .graph_generator import get_node_graph
 
-def main(args):
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Create mermaid graphs from your ros2 nodes"
+    )
+    parser.add_argument(
+        "nodes", metavar="/node", type=str, nargs="+", help="main nodes of your graph"
+    )
+    parser.add_argument(
+        "-o",
+        "--out_file",
+        dest="out_file",
+        help="set output file otherwise the graph will be printed on the console",
+        default="None",
+        type=str,
+    )
+    args = parser.parse_args()
+
     nodes = args.nodes
     out_file = args.out_file
     out_type = 0 if out_file == "None" else 1
@@ -90,19 +109,4 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Create mermaid graphs from your ros2 nodes"
-    )
-    parser.add_argument(
-        "nodes", metavar="/node", type=str, nargs="+", help="main nodes of your graph"
-    )
-    parser.add_argument(
-        "-o",
-        "--out_file",
-        dest="out_file",
-        help="set output file otherwise the graph will be printed on the console",
-        default="None",
-        type=str,
-    )
-    args = parser.parse_args()
-    main(args)
+    main()
