@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import argparse
+import subprocess
 from functools import reduce
 
 from .graph_generator import get_node_graph
@@ -34,11 +35,22 @@ def main():
         default="None",
         type=str,
     )
+    parser.add_argument(
+        "--outputFormat",
+        dest="out_type",
+        help="set an output format",
+        choises=("console", "md", "svg", "png", "pdf"),
+        default="md",
+        type=str,
+    )
     args = parser.parse_args()
 
     nodes = args.nodes
-    out_file = args.out_file
-    out_type = 0 if out_file == "None" else 1
+    out_type = args.out_file
+    out_type = args.out_type
+
+    if out_type != "console" and out_file == "None":
+        raise Exception("No output file finded")
 
     nodes_description = []
     action_links = []
@@ -110,12 +122,16 @@ def main():
         ]
     )
 
-    if out_type:
-        with open(out_file, "a") as file:
-            file.write(mermaid_graph)
-    else:
-            print(mermaid_graph)
+    if out_file == "None":
+        print(mermaid_graph)
+        return
 
+    
+    with open(out_file, "a") as file:
+        file.write(mermaid_graph)
+    if out_type != "md":
+        command = "mmdc -i " + input.mmd + " -o " + out_file + "-b transparent"
+        subprocess.run(command, shell=True)
 
 
 if __name__ == "__main__":

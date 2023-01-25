@@ -14,6 +14,12 @@ You need to have already installed ROS2 (tested on humble distro).
 pip install ros2-graph
 ```
 
+To be able to export the diagram as an image install [mermaid-cli](https://github.com/mermaid-js/mermaid-cli) on your computer
+
+```
+npm install -g @mermaid-js/mermaid-cli
+```
+
 ## How it works
  Suppose you want to generate a graph that shows how a node it's relates to other nodes by topics, services, and actions. All you need to do is run the script:
 
