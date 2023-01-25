@@ -14,17 +14,26 @@
 # limitations under the License.
 
 import argparse
+import argcomplete
 from functools import reduce
+import rclpy
+from rclpy.node import Node
 
-from .graph_generator import get_node_graph
+from .graph_generator import join_name_and_namespace, get_node_graph
 
 
 def main():
+    rclpy.init()
+    dummy_node = Node("Graph_generator")
+    raw_nodes = dummy_node.get_node_names_and_namespaces()
+    nodes_choices = [join_name_and_namespace(*node) for node in raw_nodes]
+    print(nodes_choices)
+
     parser = argparse.ArgumentParser(
         description="Create mermaid graphs from your ros2 nodes"
     )
     parser.add_argument(
-        "nodes", metavar="/node", type=str, nargs="+", help="main nodes of your graph"
+        "nodes", metavar="/node", type=str, nargs="+", help="main nodes of your graph", choices=nodes_choices
     )
     parser.add_argument(
         "-o",
@@ -34,6 +43,7 @@ def main():
         default="None",
         type=str,
     )
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
 
     nodes = args.nodes
@@ -44,7 +54,9 @@ def main():
     action_links = []
     links_count = 0
     for node in nodes:
-        mermaid, action_links_aux, links_count = get_node_graph(node, links_count)
+        mermaid, action_links_aux, links_count = get_node_graph(
+            dummy_node, node, links_count
+        )
         nodes_description += mermaid
         action_links += action_links_aux
     # remove duplicates
@@ -114,8 +126,7 @@ def main():
         with open(out_file, "a") as file:
             file.write(mermaid_graph)
     else:
-            print(mermaid_graph)
-
+        print(mermaid_graph)
 
 
 if __name__ == "__main__":

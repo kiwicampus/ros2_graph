@@ -16,16 +16,11 @@
 import subprocess
 from functools import partial
 from typing import Dict, List, Tuple
-
-import rclpy
 from rclpy.node import Node
 
 ElementNameTypes = Tuple[str, List[str]]
 RelatedNodes = Dict[str, List[str]]
 ElementRelatedNodes = Dict[str, RelatedNodes]
-
-rclpy.init()
-dummy = Node("Graph_generator")
 
 
 def between_patterns(pattern: Tuple[str], file: str) -> str:
@@ -136,11 +131,12 @@ def filter_topics(topic: Tuple[str, str]) -> bool:
 
 
 def get_topics_related_nodes(
-    topics: List[ElementNameTypes], subscribers: bool
+    dummy_node: Node, topics: List[ElementNameTypes], subscribers: bool
 ) -> ElementRelatedNodes:
     """!
     Get publishers or subcribers nodes for the specified topics
 
+    @param dummy_node, ros2 node
     @param topics (list[tuple(name, types list)]) List of topics with names and type
     @param publishers (bool) get publishers or subscribers nodes
 
@@ -153,9 +149,9 @@ def get_topics_related_nodes(
     topics_names = topics_and_nodes.keys()
 
     get_endpoints_function = (
-        dummy.get_publishers_info_by_topic
+        dummy_node.get_publishers_info_by_topic
         if subscribers
-        else dummy.get_subscriptions_info_by_topic
+        else dummy_node.get_subscriptions_info_by_topic
     )
 
     for topic in topics_names:
@@ -169,9 +165,10 @@ def get_topics_related_nodes(
 
 
 def get_services_related_nodes(
-    services: List[ElementNameTypes], clients: bool
+    dummy_node: Node, services: List[ElementNameTypes], clients: bool
 ) -> ElementRelatedNodes:
     """! Get servers or clients nodes for the specified services
+    @param dummy_node, ros2 node
     @param services list of tuple(name: str, types: list)
     @param clients, True for get clients names, false for server names
     @return dictonary with structure {service_name: {"type": type, "nodes": client or server nodes names list}}
@@ -198,12 +195,12 @@ def get_services_related_nodes(
     }
 
     services_names = services_and_nodes.keys()
-    nodes_list = dummy.get_node_names_and_namespaces()
+    nodes_list = dummy_node.get_node_names_and_namespaces()
 
     get_services_function = (
-        dummy.get_client_names_and_types_by_node
+        dummy_node.get_client_names_and_types_by_node
         if clients
-        else dummy.get_service_names_and_types_by_node
+        else dummy_node.get_service_names_and_types_by_node
     )
 
     for node in nodes_list:
@@ -365,7 +362,7 @@ def mermaid_actions(
     return mermaid_action_description, links_count
 
 
-def get_node_graph(node, links_count):
+def get_node_graph(dummy_node: Node, node: str, links_count: int):
 
     patterns = {
         "action_servers": ("Action Servers:", "Action Clients:"),
@@ -388,15 +385,25 @@ def get_node_graph(node, links_count):
         namespace = "/"
     name_and_namespace = (name, namespace)
 
-    subscribers = dummy.get_subscriber_names_and_types_by_node(*name_and_namespace)
-    publishers = dummy.get_publisher_names_and_types_by_node(*name_and_namespace)
-    services_server = dummy.get_service_names_and_types_by_node(*name_and_namespace)
-    services_client = dummy.get_client_names_and_types_by_node(*name_and_namespace)
+    subscribers = dummy_node.get_subscriber_names_and_types_by_node(*name_and_namespace)
+    publishers = dummy_node.get_publisher_names_and_types_by_node(*name_and_namespace)
+    services_server = dummy_node.get_service_names_and_types_by_node(
+        *name_and_namespace
+    )
+    services_client = dummy_node.get_client_names_and_types_by_node(*name_and_namespace)
 
-    topics_subscribers = get_topics_related_nodes(subscribers, subscribers=True)
-    topics_publishers = get_topics_related_nodes(publishers, subscribers=False)
-    service_clients = get_services_related_nodes(services_server, clients=True)
-    service_servers = get_services_related_nodes(services_client, clients=False)
+    topics_subscribers = get_topics_related_nodes(
+        dummy_node, subscribers, subscribers=True
+    )
+    topics_publishers = get_topics_related_nodes(
+        dummy_node, publishers, subscribers=False
+    )
+    service_clients = get_services_related_nodes(
+        dummy_node, services_server, clients=True
+    )
+    service_servers = get_services_related_nodes(
+        dummy_node, services_client, clients=False
+    )
 
     mermaid_graph_description, links_count_subs = mermaid_topics(
         node, topics_subscribers, subscribers=True
@@ -435,3 +442,14 @@ def get_node_graph(node, links_count):
     action_links = list(range(start_action_links, links_count))
 
     return mermaid_graph_description, action_links, links_count
+
+
+class NodesCompleter(object):
+    def __init__(self, dummy_node):
+        self.dummy_node = dummy_node
+
+    def __call__(self, **kwargs):
+        raw_nodes = self.dummy_node.get_node_names_and_namespaces()
+        nodes = [join_name_and_namespace(*node) for node in raw_nodes]
+        print(nodes)
+        return nodes
