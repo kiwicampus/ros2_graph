@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+# PYTHON_ARGCOMPLETE_OK
 # Copyright 2023 Kiwicampus Inc.
 #
 # Licensed under GNU GENERAL PUBLIC, version 3 (the "License");
