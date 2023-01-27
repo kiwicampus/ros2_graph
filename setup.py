@@ -1,5 +1,4 @@
 import setuptools
-import re
 from pip._internal.req import parse_requirements
 
 from ros2_graph import __version__
