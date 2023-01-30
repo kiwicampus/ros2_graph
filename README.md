@@ -14,9 +14,11 @@ You need to have already installed ROS2 (tested on humble distro).
 pip install ros2-graph
 ```
 
-To be able to export the diagram as an image install [mermaid-cli](https://github.com/mermaid-js/mermaid-cli) on your computer
+To be able to export the diagram as an image install npm and [mermaid-cli](https://github.com/mermaid-js/mermaid-cli) on your computer
 
 ```
+curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+sudo apt install nodejs
 npm install -g @mermaid-js/mermaid-cli
 ```
 

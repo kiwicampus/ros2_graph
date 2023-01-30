@@ -157,7 +157,6 @@ def main():
             + out_type
             + " -b transparent"
         )
-        print(command)
         subprocess.run(command, shell=True)
     except:
         print(
