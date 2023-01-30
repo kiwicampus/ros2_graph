@@ -36,6 +36,13 @@ Example
 ros2_graph /turtlesim -o turtle_diagram.md
 ```
 
+You can also  export the diagram as an image (png, svg or pdf) by setting the right file extension or using the flag --outputFormat:
+
+```
+ros2_graph /turtlesim -o turtle_diagram.png
+ros2_graph /turtlesim -o turtle_diagram --outputFormat png
+```
+
 
 
 **Note:** you must copy everything between *\`\`\`mermaid* and *\`\`\`* including both marks.
