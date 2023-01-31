@@ -14,6 +14,14 @@ You need to have already installed ROS2 (tested on humble distro).
 pip install ros2-graph
 ```
 
+To be able to export the diagram as an image install npm and [mermaid-cli](https://github.com/mermaid-js/mermaid-cli) on your computer
+
+```
+curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+sudo apt install nodejs
+npm install -g @mermaid-js/mermaid-cli
+```
+
 ## How it works
  Suppose you want to generate a graph that shows how a node it's relates to other nodes by topics, services, and actions. All you need to do is run the script:
 
@@ -26,6 +34,13 @@ Example
 
 ```
 ros2_graph /turtlesim -o turtle_diagram.md
+```
+
+You can also  export the diagram as an image (png, svg or pdf) by setting the right file extension or using the flag --outputFormat:
+
+```
+ros2_graph /turtlesim -o turtle_diagram.png
+ros2_graph /turtlesim -o turtle_diagram --outputFormat png
 ```
 
 
