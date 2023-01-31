@@ -14,6 +14,9 @@
 # limitations under the License.
 
 import argparse
+import subprocess
+from os.path import splitext
+from os import remove
 from functools import reduce
 
 from .graph_generator import get_node_graph
@@ -34,11 +37,33 @@ def main():
         default="None",
         type=str,
     )
+    parser.add_argument(
+        "--outputFormat",
+        dest="out_type",
+        help="set an output format",
+        choices=("console", "md", "svg", "png", "pdf"),
+        default="console",
+        type=str,
+    )
     args = parser.parse_args()
 
     nodes = args.nodes
-    out_file = args.out_file
-    out_type = 0 if out_file == "None" else 1
+    out_file, aux_out_type = splitext(args.out_file)
+    out_type = "console"
+
+    # use file extension as default type
+    if aux_out_type != "":
+        out_type = aux_out_type
+
+    if args.out_type != "console":
+        out_type = "." + args.out_type
+
+    # use .md as output type if is not declared but there is an output file
+    if out_file != "None" and out_type == "console":
+        out_type = ".md"
+
+    if out_type != "console" and out_file == "None":
+        raise Exception("Output file is missing")
 
     nodes_description = []
     action_links = []
@@ -97,7 +122,7 @@ def main():
 
     mermaid_style = "\n".join(mermaid_style)
 
-    heading = "\n```mermaid\nflowchart LR\n"
+    heading = "```mermaid\nflowchart LR\n"
 
     mermaid_graph = "\n".join(
         [
@@ -110,12 +135,35 @@ def main():
         ]
     )
 
-    if out_type:
-        with open(out_file, "a") as file:
-            file.write(mermaid_graph)
-    else:
-            print(mermaid_graph)
+    # print on console
+    if out_file == "None":
+        print(mermaid_graph)
+        return
 
+    with open(out_file + ".md", "a") as file:
+        file.write(mermaid_graph)
+
+    # Save .md file
+    if out_type == ".md":
+        return
+
+    # Export image
+    try:
+        command = (
+            "npx -p @mermaid-js/mermaid-cli mmdc -i "
+            + out_file
+            + ".md -o "
+            + out_file
+            + out_type
+            + " -b transparent"
+        )
+        subprocess.run(command, shell=True)
+    except:
+        print(
+            "An error using mermaid-cli look for more details in https://github.com/mermaid-js/mermaid-cli"
+        )
+    finally:
+        remove(out_file + ".md")
 
 
 if __name__ == "__main__":
