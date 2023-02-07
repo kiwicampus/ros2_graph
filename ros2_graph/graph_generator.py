@@ -430,7 +430,7 @@ def get_node_graph(node, links_count):
         node, action_servers, clients=True
     )
     mermaid_graph_description.extend(mermaid_list)
-    links_count += links_count_sserver
+    links_count += links_count_aserver
 
     action_links = list(range(start_action_links, links_count))
 
