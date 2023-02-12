@@ -207,7 +207,6 @@ def get_services_related_nodes(
     )
 
     for node in nodes_list:
-
         services = tuple(map(lambda x: x[0], get_services_function(*node)))
         filtered_services = tuple(
             filter((lambda service: service in services_names), services)
@@ -340,7 +339,6 @@ def mermaid_actions(
     mermaid_action_description = []
     links_count = 0
     for action, action_info in actions.items():
-
         n_clients = len(action_info["nodes"])
         links_count += 1 + n_clients
 
@@ -366,7 +364,6 @@ def mermaid_actions(
 
 
 def get_node_graph(node, links_count):
-
     patterns = {
         "action_servers": ("Action Servers:", "Action Clients:"),
         "action_client": ("Action Clients:",),
