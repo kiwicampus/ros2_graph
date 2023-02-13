@@ -70,7 +70,7 @@ def get_name_namespace_type(line: str) -> Tuple[str]:
     full_name, type = line.split(":")
     namespace, name = split_full_name(full_name)
 
-    return tuple(name, namespace, type)
+    return name, namespace, type
 
 
 def get_node_info_block(pattern: tuple, file: str) -> Tuple[Tuple[str]]:

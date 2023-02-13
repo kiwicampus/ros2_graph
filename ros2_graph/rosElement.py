@@ -15,7 +15,7 @@
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Set
+from typing import List, Dict
 
 
 class ELEMENT_TYPE(Enum):
@@ -47,6 +47,20 @@ class LINK_TYPE(Enum):
     SERVICE_CLIENT = 3
     ACTION_SERVER = 4
     ACTION_CLIENT = 5
+    def inverse_link(link_type: int) -> int:
+        if link_type == LINK_TYPE.TOPIC_SUBSCRIBER:
+            return LINK_TYPE.TOPIC_PUBLISHER
+        if link_type == LINK_TYPE.TOPIC_PUBLISHER:
+            return LINK_TYPE.TOPIC_SUBSCRIBER
+        if link_type == LINK_TYPE.SERVICE_SERVER:
+            return LINK_TYPE.SERVICE_CLIENT
+        if link_type == LINK_TYPE.SERVICE_CLIENT:
+            return LINK_TYPE.SERVICE_SERVER
+        if link_type == LINK_TYPE.ACTION_SERVER:
+            return LINK_TYPE.ACTION_CLIENT
+        if link_type == LINK_TYPE.ACTION_CLIENT:
+            return LINK_TYPE.ACTION_SERVER
+        raise ValueError("Non valid link type code")
 
 
 @dataclass
@@ -54,7 +68,7 @@ class RosElement:
     # RosElement Class store basic information of ROS elements: Nodes, topics, services and actions
     name: str
     namespace: str
-    type: int
+    type: ELEMENT_TYPE
 
     def full_name(self) -> str:
         """!  Put togheter name and name space on a sigle string
@@ -70,14 +84,10 @@ class RosElement:
         self.types = types
 
     def __eq__(self, other) -> bool:
-        return (
-            self.name == other.name
-            and self.namespace == other.namespace
-            and self.type == other.type
-        )
+        return self.name == other.name and self.namespace == other.namespace
 
     def __hash__(self) -> int:
-        return hash(self.name) ^ hash(self.namespace) ^ hash(self.type)
+        return hash(self.name) ^ hash(self.namespace)
 
 
 @dataclass
@@ -124,15 +134,19 @@ class Link:
 
 @dataclass
 class NodeElement(RosElement):
-    links: List[Set[Link]] = [set()] * 6
+    links: List[Dict[Link]] = [dict()] * 6
 
-    def addLink(self, linkedElement: NoNodeElement, linkStr: str, link_type: int):
+    def addLink(self, linkedElement: NoNodeElement, linkStr: str, link_type: LINK_TYPE):
         link = Link(linkedElement=linkedElement, linkStr=linkStr)
-        self.links[link_type].add(link)
+        link_hash = hash(link)
+        index = link_type.value
+        if link_hash not in self.links[index]:
+            self.links[index].add(link)
 
-    def getLinksStr(self, which: int) -> str:
+    def getLinksStr(self, which: LINK_TYPE) -> str:
         name = self.full_name()
-        return [name + " " + str(link) for link in self.links[which]]
+        index = which.value
+        return [name + " " + str(link) for link in self.links[index]]
 
     def __str__(self):
         name = self.full_name()
