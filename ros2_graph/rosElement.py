@@ -47,6 +47,7 @@ class LINK_TYPE(Enum):
     SERVICE_CLIENT = 3
     ACTION_SERVER = 4
     ACTION_CLIENT = 5
+
     def inverse_link(link_type: int) -> int:
         if link_type == LINK_TYPE.TOPIC_SUBSCRIBER:
             return LINK_TYPE.TOPIC_PUBLISHER
@@ -74,20 +75,14 @@ class RosElement:
         """!  Put togheter name and name space on a sigle string
         @return str namespace/name
         """
+        print(self.namespace,self.name)
         if self.namespace is None:
             return self.name
-        if len(self.namespace) > 1:
-            self.namespace += "/"
+        print(self.namespace,self.name)
         return self.namespace + self.name
 
     def addTypes(self, types) -> None:
         self.types = types
-
-    def __eq__(self, other) -> bool:
-        return self.name == other.name and self.namespace == other.namespace
-
-    def __hash__(self) -> int:
-        return hash(self.name) ^ hash(self.namespace)
 
 
 @dataclass
@@ -116,6 +111,12 @@ class NoNodeElement(RosElement):
             + style
         )
 
+    def __eq__(self, another) -> bool:
+        return self.name == another.name and self.namespace == another.namespace
+
+    def __hash__(self) -> int:
+        return hash(self.name) ^ hash(self.namespace)
+
 
 @dataclass
 class Link:
@@ -125,8 +126,11 @@ class Link:
     def __str__(self) -> str:
         return self.linkStr + " " + self.linkedElement.full_name()
 
-    def __eq__(self, other) -> bool:
-        return self.linkedElement and self.linkStr
+    def __eq__(self, another) -> bool:
+        return (
+            self.linkedElement == another.linkedElement
+            and self.linkStr == another.linkStr
+        )
 
     def __hash__(self) -> int:
         return hash(self.linkedElement) ^ hash(self.linkStr)
@@ -134,7 +138,8 @@ class Link:
 
 @dataclass
 class NodeElement(RosElement):
-    links: List[Dict[Link]] = [dict()] * 6
+    def __post_init__(self):
+        self.links: List[Dict[int, Link]] = [dict()] * 6
 
     def addLink(self, linkedElement: NoNodeElement, linkStr: str, link_type: LINK_TYPE):
         link = Link(linkedElement=linkedElement, linkStr=linkStr)
@@ -151,3 +156,9 @@ class NodeElement(RosElement):
     def __str__(self):
         name = self.full_name()
         return f"{name}:::{element_style(self.type)}"
+    
+    def __eq__(self, another) -> bool:
+        return self.name == another.name and self.namespace == another.namespace
+
+    def __hash__(self) -> int:
+        return hash(self.name) ^ hash(self.namespace)

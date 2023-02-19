@@ -1,14 +1,15 @@
 import subprocess
 from typing import List, Tuple
-
-
-def save_ros_node_info(node_name: str, file: str) -> None:
-    subprocess.check_output(f"ros2 node info {node_name} >> {file}", shell=True)
+import os
 
 
 def remove_file(file: str) -> None:
-    subprocess.check_output(f"rm {file}", shell=True)
+    if os.path.exists(file):
+        os.remove(file)
 
+def save_ros_node_info(node_name: str, file: str) -> None:
+    remove_file(file)
+    subprocess.check_output(f"ros2 node info {node_name} >> {file}", shell=True)
 
 def between_patterns(pattern: Tuple[str], file: str) -> str:
     """!

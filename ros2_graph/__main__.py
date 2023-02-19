@@ -67,7 +67,7 @@ def main():
     graph_generator = GraphGenerator()
 
     for node in nodes:
-        graph_generator.get_node_graph(node, links_count)
+        graph_generator.get_node_graph(node)
 
     mermaid_graph = graph_generator.get_mermaid()
 
