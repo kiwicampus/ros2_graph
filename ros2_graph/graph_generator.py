@@ -21,6 +21,7 @@ from rclpy.node import Node
 
 from .rosElement import ELEMENT_TYPE, LINK_TYPE, NoNodeElement, NodeElement
 import ros_cli_utils as rcu
+from functools import reduce
 
 ElementNameTypes = Tuple[str, List[str]]
 RelatedNodes = Dict[str, List[str]]
@@ -32,11 +33,11 @@ class GraphGenerator:
         rclpy.init()
         self.dummy = Node("Graph_generator")
         self.ros_node_info_file = "node_info.txt"
-        self.mainNodes = dict()
-        self.nodes = dict()
-        self.topics = dict()
-        self.services = dict()
-        self.actions = dict()
+        self.mainNodes: Dict[int,NodeElement] = dict() 
+        self.nodes: Dict[int,NodeElement] = dict()
+        self.topics: Dict[int,NoNodeElement] = dict()
+        self.services: Dict[int,NoNodeElement] = dict()
+        self.actions: Dict[int,NoNodeElement] = dict()
 
     def newNoNode(
         self, new_element: NoNodeElement, elemt_dict: Dict[int, NoNodeElement]
@@ -250,7 +251,7 @@ class GraphGenerator:
             for node in nodes:
                 node.addLink(linkedElement, linkStr, link_type)
 
-    def get_node_graph(self, node, links_count):
+    def get_node_graph(self, node):
         name, namespace = rcu.split_full_name(node)
         newMain = NodeElement(name, namespace, type=ELEMENT_TYPE.MAIN)
         main_hash = hash(newMain)
@@ -296,6 +297,56 @@ class GraphGenerator:
         self.createLinks(relations=service_servers, linkStr="<-.->", link_type=LINK_TYPE.SERVICE_SERVER)
         self.createLinks(relations=action_clients, linkStr="o==o", link_type=LINK_TYPE.ACTION_CLIENT)
         self.createLinks(relations=action_servers, linkStr="<==>", link_type=LINK_TYPE.ACTION_SERVER)
+
+    def get_nodes_mermaid(self, nodes: Dict[int,NodeElement]) -> Tuple[str,Dict[LINK_TYPE, List[str]]]:
+        nodes_list = list(nodes.values())
+        nodes_mermaid = "\n".join(nodes_list)
+        links_mermaid = {
+            name: reduce(lambda mermaid_lines, node: mermaid_lines.extend(node.getLinksStr()), list())
+            for name in LINK_TYPE
+        }
+        return nodes_mermaid, links_mermaid
+    
+    def get_mermaid(self) -> Tuple[str, Tuple[Tuple[int, int]]]:
+        main_style, str_main_links = self.get_nodes_mermaid(self.mainNodes)
+        nodes_style, str_nodes_links = self.get_nodes_mermaid(self.mainNodes)
+
+        topics_style = "\n".join(self.topics.values())
+        services_style = "\n".join(self.services.values())
+        actions_style = "\n".join(self.actions.values())
+
+        all_links = {
+            name: str_main_links[name] + str_nodes_links[name]
+            for name in LINK_TYPE
+        }
+
+        topic_links = all_links[LINK_TYPE.TOPIC_PUBLISHER] + all_links[LINK_TYPE.TOPIC_SUBSCRIBER]
+        service_links = all_links[LINK_TYPE.SERVICE_CLIENT] + all_links[LINK_TYPE.SERVICE_SERVER]
+        action_links = all_links[LINK_TYPE.ACTION_CLIENT] + all_links[LINK_TYPE.ACTION_SERVER]
+        
+        num_topic_links = (0, len(topic_links))
+        num_service_links = (num_topic_links[1], num_topic_links[1] + len(service_links))
+        num_action_links = (num_service_links[1], num_service_links[1] + len(action_links))
+
+        links_ranges = (num_topic_links, num_service_links, num_action_links)
+
+        mermaid_graph = [
+            main_style,
+            nodes_style,
+            topics_style,
+            services_style,
+            actions_style,
+            "\n".join(topic_links),
+            "\n".join(service_links),
+            "\n".join(action_links),
+        ]
+        mermaid_str = "\n".join(mermaid_graph)
+
+        return mermaid_str, links_ranges
+
+
+
+
 
 
 def is_not_in_blacklist(element: Tuple[str, str], blacklist: List[str]) -> bool:

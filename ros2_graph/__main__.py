@@ -17,9 +17,8 @@ import argparse
 import subprocess
 from os.path import splitext
 from os import remove
-from functools import reduce
 
-from .graph_generator import get_node_graph
+from .graph_generator import GraphGenerator
 
 
 def main():
@@ -65,20 +64,12 @@ def main():
     if out_type != "console" and out_file == "None":
         raise Exception("Output file is missing")
 
-    nodes_description = []
-    action_links = []
-    links_count = 0
+    graph_generator = GraphGenerator()
+
     for node in nodes:
-        mermaid, action_links_aux, links_count = get_node_graph(node, links_count)
-        nodes_description += mermaid
-        action_links += action_links_aux
-    # remove duplicates
-    no_duplicates = [
-        i for n, i in enumerate(nodes_description) if i not in nodes_description[:n]
-    ]
-    links_count = links_count - (len(nodes_description) - len(no_duplicates))
-    nodes_description = "\n".join(no_duplicates)
-    main_nodes_style = reduce(lambda a, node: a + f"{node}:::main_node\n", nodes, "")
+        graph_generator.get_node_graph(node, links_count)
+
+    mermaid_graph = graph_generator.get_mermaid()
 
     mermaid_convention = "\n".join(
         [
@@ -102,10 +93,10 @@ def main():
     )
 
     # Add action links of conventions sub graph (the 4th and the 5th)
-    action_links.extend([links_count + 4, links_count + 5])
-    action_links_style = (
-        "linkStyle " + ",".join(map(str, action_links)) + " fill:none,stroke:green;"
-    )
+    # action_links.extend([links_count + 4, links_count + 5])
+    # action_links_style = (
+    #    "linkStyle " + ",".join(map(str, action_links)) + " fill:none,stroke:green;"
+    # )
 
     mermaid_style = [
         "classDef node opacity:0.9,fill:#2A0,stroke:#391,stroke-width:4px,color:#fff",
@@ -118,7 +109,6 @@ def main():
         "style nodes opacity:0.15,fill:#FFF",
         "style connection opacity:0.15,fill:#FFF",
     ]
-    mermaid_style.append(action_links_style)
 
     mermaid_style = "\n".join(mermaid_style)
 
@@ -127,8 +117,7 @@ def main():
     mermaid_graph = "\n".join(
         [
             heading,
-            nodes_description,
-            main_nodes_style,
+            mermaid_graph,
             mermaid_convention,
             mermaid_style,
             "```\n",
