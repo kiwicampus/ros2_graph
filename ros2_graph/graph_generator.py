@@ -19,7 +19,7 @@ from typing import Dict, List, Tuple
 import rclpy
 from rclpy.node import Node
 
-from .rosElement import ELEMENT_TYPE, LINK_TYPE, NoNodeElement, NodeElement
+from .rosElement import ELEMENT_TYPE, LINK_TYPE, NoNodeElement, NodeElement, listRosElement2ListStr
 from . import ros_cli_utils as rcu
 from functools import reduce
 
@@ -70,7 +70,9 @@ class GraphGenerator:
         @param topic data tuples (name, namespace, ros_type)
         @return NoNodeElement topic object
         """
-        new_topic = NoNodeElement(name, namespace, ros_type, type=ELEMENT_TYPE.TOPIC)
+        new_topic = NoNodeElement(
+            name, namespace, ros_type=ros_type, type=ELEMENT_TYPE.TOPIC
+        )
         return self.newNoNode(new_topic, self.topics)
 
     def newService(self, name: str, namespace: str, ros_type: str) -> NoNodeElement:
@@ -78,8 +80,9 @@ class GraphGenerator:
         @param service data tuples (name, namespace, ros_type)
         @return NoNodeElement service object
         """
+        print(ros_type)
         new_service = NoNodeElement(
-            name, namespace, ros_type, type=ELEMENT_TYPE.SERVICE
+            name, namespace, ros_type=ros_type, type=ELEMENT_TYPE.SERVICE
         )
         return self.newNoNode(new_service, self.services)
 
@@ -124,9 +127,9 @@ class GraphGenerator:
         @param nodes_data: nodes info in (name, namespace) format
         @return a tuple of NodeElement objects
         """
-        return tuple(map(self.newNode, *nodes_data))
+        return tuple((self.newNode(*node) for node in nodes_data))
 
-    def filter_topics(topic: Tuple[str, str]) -> bool:
+    def filter_topics(self, topic: Tuple[str, str]) -> bool:
         """! To filter undesired topics
         @param topic tuple(name, type)
         @return False if the topic is not desired
@@ -230,7 +233,7 @@ class GraphGenerator:
         services_and_nodesObj = {}
         for service, sub_dict in services_and_nodes.items():
             name, namespace = rcu.split_full_name(service)
-            ros_type = "<br>".join(sub_dict["type"])
+            ros_type = sub_dict["type"]
             serviceObj = self.newService(name, namespace, ros_type)
             services_and_nodesObj[serviceObj] = sub_dict["nodes"]
 
@@ -248,8 +251,8 @@ class GraphGenerator:
         @linkStr How it must be displayed?
         @link_type: subscription, publisher, service server ...
         """
-        for linkedElement, nodes in relations.item():
-            inv_link_type = ELEMENT_TYPE.inverse_link(link_type)
+        for linkedElement, nodes in relations.items():
+            inv_link_type = LINK_TYPE.inverse_link(link_type)
             main_node.addLink(linkedElement, linkStr, inv_link_type)
             for node in nodes:
                 node.addLink(linkedElement, linkStr, link_type)
@@ -297,40 +300,52 @@ class GraphGenerator:
         )
 
         self.createLinks(
+            main_node=newMain,
             relations=topics_subscribers,
             linkStr="-->",
             link_type=LINK_TYPE.TOPIC_SUBSCRIBER,
         )
         self.createLinks(
+            main_node=newMain,
             relations=topics_publishers,
             linkStr="-->",
             link_type=LINK_TYPE.TOPIC_PUBLISHER,
         )
         self.createLinks(
+            main_node=newMain,
             relations=service_clients,
             linkStr="o-.-o",
             link_type=LINK_TYPE.SERVICE_CLIENT,
         )
         self.createLinks(
+            main_node=newMain,
             relations=service_servers,
             linkStr="<-.->",
             link_type=LINK_TYPE.SERVICE_SERVER,
         )
         self.createLinks(
-            relations=action_clients, linkStr="o==o", link_type=LINK_TYPE.ACTION_CLIENT
+            main_node=newMain,
+            relations=action_clients,
+            linkStr="o==o",
+            link_type=LINK_TYPE.ACTION_CLIENT,
         )
         self.createLinks(
-            relations=action_servers, linkStr="<==>", link_type=LINK_TYPE.ACTION_SERVER
+            main_node=newMain,
+            relations=action_servers,
+            linkStr="<==>",
+            link_type=LINK_TYPE.ACTION_SERVER,
         )
 
     def get_nodes_mermaid(
         self, nodes: Dict[int, NodeElement]
     ) -> Tuple[str, Dict[LINK_TYPE, List[str]]]:
-        nodes_list = list(nodes.values())
+        nodes_list = [str(val) for val in nodes.values()]
         nodes_mermaid = "\n".join(nodes_list)
+
         links_mermaid = {
             name: reduce(
-                lambda mermaid_lines, node: mermaid_lines.extend(node.getLinksStr()),
+                lambda mermaid_lines, node: mermaid_lines + node.getLinksStr(name),
+                nodes.values(),
                 list(),
             )
             for name in LINK_TYPE
@@ -341,9 +356,12 @@ class GraphGenerator:
         main_style, str_main_links = self.get_nodes_mermaid(self.mainNodes)
         nodes_style, str_nodes_links = self.get_nodes_mermaid(self.mainNodes)
 
-        topics_style = "\n".join(self.topics.values())
-        services_style = "\n".join(self.services.values())
-        actions_style = "\n".join(self.actions.values())
+        topics_str = listRosElement2ListStr(self.topics.values())
+        services_str = listRosElement2ListStr(self.services.values())
+        actions_str = listRosElement2ListStr(self.actions.values())
+        topics_style = "\n".join(topics_str)
+        services_style = "\n".join(services_str)
+        actions_style = "\n".join(actions_str)
 
         all_links = {
             name: str_main_links[name] + str_nodes_links[name] for name in LINK_TYPE

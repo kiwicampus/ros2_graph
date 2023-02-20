@@ -69,7 +69,7 @@ def main():
     for node in nodes:
         graph_generator.get_node_graph(node)
 
-    mermaid_graph = graph_generator.get_mermaid()
+    mermaid_graph, links_ranges = graph_generator.get_mermaid()
 
     mermaid_convention = "\n".join(
         [

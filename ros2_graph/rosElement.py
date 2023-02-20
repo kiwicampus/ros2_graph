@@ -75,15 +75,15 @@ class RosElement:
         """!  Put togheter name and name space on a sigle string
         @return str namespace/name
         """
-        print(self.namespace,self.name)
         if self.namespace is None:
             return self.name
-        print(self.namespace,self.name)
         return self.namespace + self.name
 
     def addTypes(self, types) -> None:
         self.types = types
 
+def listRosElement2ListStr(elements: List[RosElement]) -> List[str]:
+    return [ str(element) for element in elements]
 
 @dataclass
 class NoNodeElement(RosElement):
@@ -146,17 +146,18 @@ class NodeElement(RosElement):
         link_hash = hash(link)
         index = link_type.value
         if link_hash not in self.links[index]:
-            self.links[index].add(link)
+            self.links[index][link_hash] = link
 
-    def getLinksStr(self, which: LINK_TYPE) -> str:
+    def getLinksStr(self, which: LINK_TYPE) -> List[str]:
         name = self.full_name()
         index = which.value
-        return [name + " " + str(link) for link in self.links[index]]
+        linksStr = [name + " " + str(link) for link in self.links[index].values()]
+        return linksStr
 
     def __str__(self):
         name = self.full_name()
         return f"{name}:::{element_style(self.type)}"
-    
+
     def __eq__(self, another) -> bool:
         return self.name == another.name and self.namespace == another.namespace
 
