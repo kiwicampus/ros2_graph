@@ -19,7 +19,13 @@ from typing import Dict, List, Tuple
 import rclpy
 from rclpy.node import Node
 
-from .rosElement import ELEMENT_TYPE, LINK_TYPE, NoNodeElement, NodeElement, listRosElement2ListStr
+from .rosElement import (
+    ELEMENT_TYPE,
+    LINK_TYPE,
+    NoNodeElement,
+    NodeElement,
+    listRosElement2ListStr,
+)
 from . import ros_cli_utils as rcu
 from functools import reduce
 
@@ -53,7 +59,7 @@ class GraphGenerator:
         @return NoNodeElement action object
         """
         new_action = NoNodeElement(
-            name=data[0], namespace=data[1], ros_type=data[2], type=ELEMENT_TYPE.ACTION
+            name=name, namespace=data[1], ros_type=data[2], type=ELEMENT_TYPE.ACTION
         )
         return self.newNoNode(new_action, self.actions)
 
@@ -80,7 +86,6 @@ class GraphGenerator:
         @param service data tuples (name, namespace, ros_type)
         @return NoNodeElement service object
         """
-        print(ros_type)
         new_service = NoNodeElement(
             name, namespace, ros_type=ros_type, type=ELEMENT_TYPE.SERVICE
         )
@@ -282,7 +287,7 @@ class GraphGenerator:
         action_servers = {
             k: self.nodesFromData(v) for k, v in action_servers_data.items()
         }
-
+        print(name, namespace)
         subscribers = self.dummy.get_subscriber_names_and_types_by_node(name, namespace)
         publishers = self.dummy.get_publisher_names_and_types_by_node(name, namespace)
         services_server = self.dummy.get_service_names_and_types_by_node(
@@ -354,7 +359,9 @@ class GraphGenerator:
 
     def get_mermaid(self) -> Tuple[str, Tuple[Tuple[int, int]]]:
         main_style, str_main_links = self.get_nodes_mermaid(self.mainNodes)
-        nodes_style, str_nodes_links = self.get_nodes_mermaid(self.mainNodes)
+        nodes_style, str_nodes_links = self.get_nodes_mermaid(self.nodes)
+
+        # print(str_main_links)
 
         topics_str = listRosElement2ListStr(self.topics.values())
         services_str = listRosElement2ListStr(self.services.values())
@@ -400,7 +407,6 @@ class GraphGenerator:
             "\n".join(action_links),
         ]
         mermaid_str = "\n".join(mermaid_graph)
-
         return mermaid_str, links_ranges
 
 

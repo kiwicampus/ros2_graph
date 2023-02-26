@@ -41,8 +41,8 @@ def element_style(element_type: int) -> str:
 
 
 class LINK_TYPE(Enum):
-    TOPIC_SUBSCRIBER = 0
-    TOPIC_PUBLISHER = 1
+    TOPIC_PUBLISHER = 0
+    TOPIC_SUBSCRIBER = 1
     SERVICE_SERVER = 2
     SERVICE_CLIENT = 3
     ACTION_SERVER = 4
@@ -82,17 +82,24 @@ class RosElement:
     def addTypes(self, types) -> None:
         self.types = types
 
+
 def listRosElement2ListStr(elements: List[RosElement]) -> List[str]:
-    return [ str(element) for element in elements]
+    return [str(element) for element in elements]
+
 
 @dataclass
 class NoNodeElement(RosElement):
     ros_type: str
-    no_connected: bool = True
+    from_connected: bool = False
+    to_connected: bool = False
 
     def __str__(self) -> str:
         name = self.full_name()
-        style = "bugged" if self.no_connected else element_style(self.type)
+        style = (
+            element_style(self.type)
+            if self.from_connected and self.to_connected
+            else "bugged"
+        )
         if self.type == ELEMENT_TYPE.TOPIC:
             brackets = ("([", "])")
         if self.type == ELEMENT_TYPE.SERVICE:
@@ -124,7 +131,7 @@ class Link:
     linkStr: str
 
     def __str__(self) -> str:
-        return self.linkStr + " " + self.linkedElement.full_name()
+        return self.linkedElement.full_name()
 
     def __eq__(self, another) -> bool:
         return (
@@ -139,7 +146,7 @@ class Link:
 @dataclass
 class NodeElement(RosElement):
     def __post_init__(self):
-        self.links: List[Dict[int, Link]] = [dict()] * 6
+        self.links: List[Dict[int, Link]] = [dict() for i in range(6)]
 
     def addLink(self, linkedElement: NoNodeElement, linkStr: str, link_type: LINK_TYPE):
         link = Link(linkedElement=linkedElement, linkStr=linkStr)
@@ -147,11 +154,19 @@ class NodeElement(RosElement):
         index = link_type.value
         if link_hash not in self.links[index]:
             self.links[index][link_hash] = link
+        if index % 2:
+            linkedElement.from_connected = True
+        else:
+            linkedElement.to_connected = True
 
     def getLinksStr(self, which: LINK_TYPE) -> List[str]:
         name = self.full_name()
         index = which.value
-        linksStr = [name + " " + str(link) for link in self.links[index].values()]
+        linksStr = [
+            name + " " + link.linkStr + " " + str(link) 
+            if index % 2 else
+            str(link) + " " + link.linkStr + " " + name
+            for link in self.links[index].values()]
         return linksStr
 
     def __str__(self):
