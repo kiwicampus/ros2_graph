@@ -395,16 +395,17 @@ class GraphGenerator:
         )
 
         links_ranges = (num_topic_links, num_service_links, num_action_links)
-
+        print(main_style)
+        print(nodes_style)
         mermaid_graph = [
             main_style,
             nodes_style,
             topics_style,
             services_style,
             actions_style,
-            "\n".join(topic_links),
             "\n".join(service_links),
             "\n".join(action_links),
+            "\n".join(topic_links),
         ]
         mermaid_str = "\n".join(mermaid_graph)
         return mermaid_str, links_ranges

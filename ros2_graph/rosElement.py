@@ -163,10 +163,11 @@ class NodeElement(RosElement):
         name = self.full_name()
         index = which.value
         linksStr = [
-            name + " " + link.linkStr + " " + str(link) 
-            if index % 2 else
-            str(link) + " " + link.linkStr + " " + name
-            for link in self.links[index].values()]
+            name + " " + link.linkStr + " " + str(link)
+            if index % 2
+            else str(link) + " " + link.linkStr + " " + name
+            for link in self.links[index].values()
+        ]
         return linksStr
 
     def __str__(self):
