@@ -92,6 +92,7 @@ class NoNodeElement(RosElement):
     ros_type: str
     from_connected: bool = False
     to_connected: bool = False
+    brackets: List[str] = ("([", "])")
 
     def __str__(self) -> str:
         name = self.full_name()
@@ -100,20 +101,14 @@ class NoNodeElement(RosElement):
             if self.from_connected and self.to_connected
             else "bugged"
         )
-        if self.type == ELEMENT_TYPE.TOPIC:
-            brackets = ("([", "])")
-        if self.type == ELEMENT_TYPE.SERVICE:
-            brackets = ("[/", "\]")
-        if self.type == ELEMENT_TYPE.ACTION:
-            brackets = ("{{", "}}")
 
         return (
             name
-            + brackets[0]
+            + self.brackets[0]
             + name
             + "<br>"
             + self.ros_type
-            + brackets[1]
+            + self.brackets[1]
             + ":::"
             + style
         )
@@ -145,6 +140,8 @@ class Link:
 
 @dataclass
 class NodeElement(RosElement):
+    brackets: List[str]
+
     def __post_init__(self):
         self.links: List[Dict[int, Link]] = [dict() for i in range(6)]
 

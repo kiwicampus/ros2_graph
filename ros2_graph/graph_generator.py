@@ -35,7 +35,7 @@ ElementRelatedNodes = Dict[str, RelatedNodes]
 
 
 class GraphGenerator:
-    def __init__(self):
+    def __init__(self, style_config):
         rclpy.init()
         self.dummy = Node("Graph_generator")
         self.ros_node_info_file = "node_info.txt"
@@ -45,14 +45,8 @@ class GraphGenerator:
         self.services: Dict[int, NoNodeElement] = dict()
         self.actions: Dict[int, NoNodeElement] = dict()
 
-        self.linkStrs = {
-            LINK_TYPE.TOPIC_PUBLISHER: "-->",
-            LINK_TYPE.TOPIC_SUBSCRIBER: "-->",
-            LINK_TYPE.SERVICE_SERVER: "o-.-o",
-            LINK_TYPE.SERVICE_CLIENT: "<-.->",
-            LINK_TYPE.ACTION_SERVER: "o==o",
-            LINK_TYPE.ACTION_CLIENT: "<==>",
-        }
+        self.linkStrs = style_config["links_str"]
+        self.brackets = style_config["shapes"]
 
     def newNoNode(
         self, new_element: NoNodeElement, elemt_dict: Dict[int, NoNodeElement]
@@ -68,7 +62,11 @@ class GraphGenerator:
         @return NoNodeElement action object
         """
         new_action = NoNodeElement(
-            name=data[0], namespace=data[1], ros_type=data[2], type=ELEMENT_TYPE.ACTION
+            name=data[0],
+            namespace=data[1],
+            ros_type=data[2],
+            type=ELEMENT_TYPE.ACTION,
+            brackets=self.brackets[ELEMENT_TYPE.ACTION],
         )
         return self.newNoNode(new_action, self.actions)
 
@@ -86,7 +84,11 @@ class GraphGenerator:
         @return NoNodeElement topic object
         """
         new_topic = NoNodeElement(
-            name, namespace, ros_type=ros_type, type=ELEMENT_TYPE.TOPIC
+            name,
+            namespace,
+            ros_type=ros_type,
+            type=ELEMENT_TYPE.TOPIC,
+            brackets=self.brackets[ELEMENT_TYPE.TOPIC],
         )
         return self.newNoNode(new_topic, self.topics)
 
@@ -96,7 +98,11 @@ class GraphGenerator:
         @return NoNodeElement service object
         """
         new_service = NoNodeElement(
-            name, namespace, ros_type=ros_type, type=ELEMENT_TYPE.SERVICE
+            name,
+            namespace,
+            ros_type=ros_type,
+            type=ELEMENT_TYPE.SERVICE,
+            brackets=self.brackets[ELEMENT_TYPE.SERVICE],
         )
         return self.newNoNode(new_service, self.services)
 
@@ -127,7 +133,12 @@ class GraphGenerator:
         @param data a tuple (name, namespace)
         @return the NodeElement object
         """
-        new_node = NodeElement(name, namespace, type=ELEMENT_TYPE.NODE)
+        new_node = NodeElement(
+            name,
+            namespace,
+            type=ELEMENT_TYPE.NODE,
+            brackets=self.brackets[ELEMENT_TYPE.NODE],
+        )
         node_hash = hash(new_node)
         if node_hash in self.mainNodes:
             return self.mainNodes[node_hash]
@@ -273,7 +284,12 @@ class GraphGenerator:
 
     def get_node_graph(self, node):
         name, namespace = rcu.split_full_name(node)
-        newMain = NodeElement(name, namespace, type=ELEMENT_TYPE.MAIN)
+        newMain = NodeElement(
+            name,
+            namespace,
+            type=ELEMENT_TYPE.MAIN,
+            brackets=self.brackets[ELEMENT_TYPE.MAIN],
+        )
         main_hash = hash(newMain)
 
         if main_hash in self.mainNodes:

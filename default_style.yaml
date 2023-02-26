@@ -1,0 +1,29 @@
+shapes:
+  main: ["[", "]"]
+  node: ["[", "]"]
+  topic: ["([", "])"]
+  service: ["[/", "\\]"]
+  action: ["{{", "}}"]
+colors:
+    main: "opacity:0.9,fill:#059,stroke:#09F,stroke-width:4px,color:#fff"
+    node: "opacity:0.9,fill:#2A0,stroke:#391,stroke-width:4px,color:#fff"
+    topic: "opacity:0.9,fill:#852,stroke:#CCC,stroke-width:2px,color:#fff"
+    service: "opacity:0.9,fill:#3B8062,stroke:#3B6062,stroke-width:2px,color:#fff"
+    action: "opacity:0.9,fill:#66A,stroke:#225,stroke-width:2px,color:#fff"
+    no_conected: "opacity:0.9,fill:#933,stroke:#800,stroke-width:2px,color:#fff"
+links_display:
+  topics_publisher: "-->"
+  topics_subscriber: "-->"
+  services_server: "o-.-o"
+  services_client: "<-.->"
+  action_server: "o==o"
+  action_client: "<==>"
+links_style:
+  topics_publisher: None
+  topics_subscriber: None
+  services_server: None
+  services_client: None
+  action_server: color:green;
+  action_client: color:green;
+display_keys: True
+
