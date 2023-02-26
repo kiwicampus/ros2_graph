@@ -190,23 +190,25 @@ def main():
 
     mermaid_graph, links_ranges = graph_generator.get_mermaid()
 
+    links_str = style_config["links_str"]
+    shapes = style_config["shapes"]
     mermaid_convention = (
         "\n".join(
             [
                 "subgraph keys[<b>Keys<b/>]",
                 "subgraph nodes[<b><b/>]",
                 "topicb((No connected)):::bugged",
-                "main_node:::main",
+                f"main_node{shapes[ELEMENT_TYPE.MAIN][0]}main{shapes[ELEMENT_TYPE.MAIN][1]}:::main",
                 "end",
                 "subgraph connection[<b><b/>]",
-                "node1:::node",
-                "node2:::node",
-                "node1 o-. to server .-o service[/Service<br>service/Type\]:::service",
-                "service <-. to client .-> node2",
-                "node1 -- publish --> topic([Topic<br>topic/Type]):::topic",
-                "topic -- subscribe --> node2",
-                "node1 o== to server ==o action{{/Action<br>action/Type/}}:::action",
-                "action <== to client ==> node2",
+                f"node1{shapes[ELEMENT_TYPE.NODE][0]}node1{shapes[ELEMENT_TYPE.NODE][1]}:::node",
+                f"node2{shapes[ELEMENT_TYPE.NODE][0]}node2{shapes[ELEMENT_TYPE.NODE][1]}:::node",
+                f"node1 {links_str[LINK_TYPE.SERVICE_SERVER]}|to server| service{shapes[ELEMENT_TYPE.SERVICE][0]}Service<br>service/Type{shapes[ELEMENT_TYPE.SERVICE][1]}:::service",
+                f"service {links_str[LINK_TYPE.SERVICE_CLIENT]}|to client| node2",
+                f"node1 {links_str[LINK_TYPE.TOPIC_PUBLISHER]}|publish| topic{shapes[ELEMENT_TYPE.TOPIC][0]}Topic<br>topic/Type{shapes[ELEMENT_TYPE.TOPIC][1]}:::topic",
+                f"topic {links_str[LINK_TYPE.TOPIC_SUBSCRIBER]}|subscribe| node2",
+                f"node1 {links_str[LINK_TYPE.ACTION_SERVER]}|to server| action{shapes[ELEMENT_TYPE.ACTION][0]}/Action<br>action/Type/{shapes[ELEMENT_TYPE.ACTION][1]}:::action",
+                f"action {links_str[LINK_TYPE.ACTION_CLIENT]}|to client| node2",
                 "end",
                 "end",
             ]

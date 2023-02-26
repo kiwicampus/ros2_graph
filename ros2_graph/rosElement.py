@@ -102,16 +102,7 @@ class NoNodeElement(RosElement):
             else "bugged"
         )
 
-        return (
-            name
-            + self.brackets[0]
-            + name
-            + "<br>"
-            + self.ros_type
-            + self.brackets[1]
-            + ":::"
-            + style
-        )
+        return f"{name}{self.brackets[0]} {name}<br>{self.ros_type} {self.brackets[1]}:::{style}"
 
     def __eq__(self, another) -> bool:
         return self.name == another.name and self.namespace == another.namespace
@@ -169,7 +160,7 @@ class NodeElement(RosElement):
 
     def __str__(self):
         name = self.full_name()
-        return f"{name}:::{element_style(self.type)}"
+        return f"{name}{self.brackets[0]} {name} {self.brackets[1]}:::{element_style(self.type)}"
 
     def __eq__(self, another) -> bool:
         return self.name == another.name and self.namespace == another.namespace

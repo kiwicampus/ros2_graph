@@ -12,8 +12,8 @@ colors:
     action: "opacity:0.9,fill:#66A,stroke:#225,stroke-width:2px,color:#fff"
     no_conected: "opacity:0.9,fill:#933,stroke:#800,stroke-width:2px,color:#fff"
 links_display:
-  topics_publisher: "-->"
-  topics_subscriber: "-->"
+  topics_publisher: "==>"
+  topics_subscriber: ".->"
   services_server: "o-.-o"
   services_client: "<-.->"
   action_server: "o==o"
