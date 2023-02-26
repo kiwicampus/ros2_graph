@@ -71,8 +71,8 @@ def get_name_namespace_type(line: str) -> Tuple[str]:
     @param line: a line of the ros2 cli response. Format: namespace/name:type
     """
     full_name, type = line.split(":")
-    namespace, name = split_full_name(full_name)
-
+    name, namespace = split_full_name(full_name)
+    name = "/" + name
     return name, namespace, type
 
 

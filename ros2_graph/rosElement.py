@@ -154,10 +154,10 @@ class NodeElement(RosElement):
         index = link_type.value
         if link_hash not in self.links[index]:
             self.links[index][link_hash] = link
-        if index % 2:
-            linkedElement.from_connected = True
-        else:
-            linkedElement.to_connected = True
+            if index % 2:
+                linkedElement.from_connected = True
+            else:
+                linkedElement.to_connected = True
 
     def getLinksStr(self, which: LINK_TYPE) -> List[str]:
         name = self.full_name()

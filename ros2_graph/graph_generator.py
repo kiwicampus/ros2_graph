@@ -45,6 +45,15 @@ class GraphGenerator:
         self.services: Dict[int, NoNodeElement] = dict()
         self.actions: Dict[int, NoNodeElement] = dict()
 
+        self.linkStrs = {
+            LINK_TYPE.TOPIC_PUBLISHER: "-->",
+            LINK_TYPE.TOPIC_SUBSCRIBER: "-->",
+            LINK_TYPE.SERVICE_SERVER: "o-.-o",
+            LINK_TYPE.SERVICE_CLIENT: "<-.->",
+            LINK_TYPE.ACTION_SERVER: "o==o",
+            LINK_TYPE.ACTION_CLIENT: "<==>",
+        }
+
     def newNoNode(
         self, new_element: NoNodeElement, elemt_dict: Dict[int, NoNodeElement]
     ) -> NoNodeElement:
@@ -59,7 +68,7 @@ class GraphGenerator:
         @return NoNodeElement action object
         """
         new_action = NoNodeElement(
-            name=name, namespace=data[1], ros_type=data[2], type=ELEMENT_TYPE.ACTION
+            name=data[0], namespace=data[1], ros_type=data[2], type=ELEMENT_TYPE.ACTION
         )
         return self.newNoNode(new_action, self.actions)
 
@@ -248,19 +257,19 @@ class GraphGenerator:
         self,
         main_node: NodeElement,
         relations: Dict[NoNodeElement, List[NodeElement]],
-        linkStr: str,
         link_type: LINK_TYPE,
     ) -> None:
         """! Add links to the nodes from a relations dictionary
         @param relations, dictonary with the relationships
-        @linkStr How it must be displayed?
         @link_type: subscription, publisher, service server ...
         """
+        inv_link_type = LINK_TYPE.inverse_link(link_type)
+        linkStr1 = self.linkStrs[inv_link_type]
+        linkStr2 = self.linkStrs[link_type]
         for linkedElement, nodes in relations.items():
-            inv_link_type = LINK_TYPE.inverse_link(link_type)
-            main_node.addLink(linkedElement, linkStr, inv_link_type)
+            main_node.addLink(linkedElement, linkStr1, inv_link_type)
             for node in nodes:
-                node.addLink(linkedElement, linkStr, link_type)
+                node.addLink(linkedElement, linkStr2, link_type)
 
     def get_node_graph(self, node):
         name, namespace = rcu.split_full_name(node)
@@ -287,7 +296,6 @@ class GraphGenerator:
         action_servers = {
             k: self.nodesFromData(v) for k, v in action_servers_data.items()
         }
-        print(name, namespace)
         subscribers = self.dummy.get_subscriber_names_and_types_by_node(name, namespace)
         publishers = self.dummy.get_publisher_names_and_types_by_node(name, namespace)
         services_server = self.dummy.get_service_names_and_types_by_node(
@@ -307,37 +315,31 @@ class GraphGenerator:
         self.createLinks(
             main_node=newMain,
             relations=topics_subscribers,
-            linkStr="-->",
             link_type=LINK_TYPE.TOPIC_SUBSCRIBER,
         )
         self.createLinks(
             main_node=newMain,
             relations=topics_publishers,
-            linkStr="-->",
             link_type=LINK_TYPE.TOPIC_PUBLISHER,
         )
         self.createLinks(
             main_node=newMain,
             relations=service_clients,
-            linkStr="o-.-o",
             link_type=LINK_TYPE.SERVICE_CLIENT,
         )
         self.createLinks(
             main_node=newMain,
             relations=service_servers,
-            linkStr="<-.->",
             link_type=LINK_TYPE.SERVICE_SERVER,
         )
         self.createLinks(
             main_node=newMain,
             relations=action_clients,
-            linkStr="o==o",
             link_type=LINK_TYPE.ACTION_CLIENT,
         )
         self.createLinks(
             main_node=newMain,
             relations=action_servers,
-            linkStr="<==>",
             link_type=LINK_TYPE.ACTION_SERVER,
         )
 
@@ -360,8 +362,6 @@ class GraphGenerator:
     def get_mermaid(self) -> Tuple[str, Tuple[Tuple[int, int]]]:
         main_style, str_main_links = self.get_nodes_mermaid(self.mainNodes)
         nodes_style, str_nodes_links = self.get_nodes_mermaid(self.nodes)
-
-        # print(str_main_links)
 
         topics_str = listRosElement2ListStr(self.topics.values())
         services_str = listRosElement2ListStr(self.services.values())
