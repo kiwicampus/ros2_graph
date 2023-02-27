@@ -217,11 +217,33 @@ def main():
         else ""
     )
 
-    # Add action links of conventions sub graph (the 4th and the 5th)
-    # action_links.extend([links_count + 4, links_count + 5])
-    # action_links_style = (
-    #    "linkStyle " + ",".join(map(str, action_links)) + " fill:none,stroke:green;"
-    # )
+    links_numbers = {
+        link_type: list(range(*ranges))
+        for link_type, ranges in links_ranges.items() 
+        if ranges[1] - ranges[0] > 0 
+    }
+
+    # Add keys box links
+    if style_config["display_keys"]:
+        last_link = links_ranges[LINK_TYPE.ACTION_CLIENT][1]
+        if LINK_TYPE.TOPIC_PUBLISHER in links_numbers:
+            links_numbers[LINK_TYPE.TOPIC_PUBLISHER].append(last_link + 2)
+        if LINK_TYPE.TOPIC_SUBSCRIBER in links_numbers:
+            links_numbers[LINK_TYPE.TOPIC_SUBSCRIBER].append(last_link + 3)
+        if LINK_TYPE.SERVICE_SERVER in links_numbers:
+            links_numbers[LINK_TYPE.SERVICE_SERVER].append(last_link)
+        if LINK_TYPE.SERVICE_CLIENT in links_numbers:
+            links_numbers[LINK_TYPE.SERVICE_CLIENT].append(last_link + 1)
+        if LINK_TYPE.ACTION_SERVER in links_numbers:
+            links_numbers[LINK_TYPE.ACTION_SERVER].append(last_link + 4)
+        if LINK_TYPE.ACTION_CLIENT in links_numbers:
+            links_numbers[LINK_TYPE.ACTION_CLIENT].append(last_link + 5)
+
+    links_styles = "\n".join([
+        "linkStyle " + ",".join(map(str, numbers)) + " " + style_config["links_style"][link_type]
+        for link_type, numbers in links_numbers.items() 
+        if style_config["links_style"][link_type] != None and style_config["links_style"][link_type] != "None"
+    ])
 
     colors = style_config["colors"]
     mermaid_style = [
@@ -250,6 +272,7 @@ def main():
             mermaid_graph,
             mermaid_convention,
             mermaid_style,
+            links_styles,
             "```\n",
         ]
     )

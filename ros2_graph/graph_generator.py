@@ -390,27 +390,21 @@ class GraphGenerator:
             name: str_main_links[name] + str_nodes_links[name] for name in LINK_TYPE
         }
 
-        topic_links = (
-            all_links[LINK_TYPE.TOPIC_PUBLISHER] + all_links[LINK_TYPE.TOPIC_SUBSCRIBER]
-        )
-        service_links = (
-            all_links[LINK_TYPE.SERVICE_CLIENT] + all_links[LINK_TYPE.SERVICE_SERVER]
-        )
-        action_links = (
-            all_links[LINK_TYPE.ACTION_CLIENT] + all_links[LINK_TYPE.ACTION_SERVER]
-        )
+        num_topic_publisher_links = [0, len(all_links[LINK_TYPE.TOPIC_PUBLISHER])]
+        num_topic_subscriber_links = [num_topic_publisher_links[1], len(all_links[LINK_TYPE.TOPIC_SUBSCRIBER]) + num_topic_publisher_links[1]]
+        num_service_server_links = [num_topic_subscriber_links[1], len(all_links[LINK_TYPE.SERVICE_SERVER]) + num_topic_subscriber_links[1]]
+        num_service_client_links = [num_service_server_links[1], len(all_links[LINK_TYPE.SERVICE_CLIENT]) + num_service_server_links[1]]
+        num_action_server_links = [num_service_client_links[1], len(all_links[LINK_TYPE.ACTION_SERVER]) + num_service_client_links[1]]
+        num_action_client_links = [num_action_server_links[1], len(all_links[LINK_TYPE.ACTION_CLIENT]) + num_action_server_links[1]]
 
-        num_topic_links = (0, len(topic_links))
-        num_service_links = (
-            num_topic_links[1],
-            num_topic_links[1] + len(service_links),
-        )
-        num_action_links = (
-            num_service_links[1],
-            num_service_links[1] + len(action_links),
-        )
-
-        links_ranges = (num_topic_links, num_service_links, num_action_links)
+        links_ranges = {
+            LINK_TYPE.TOPIC_PUBLISHER: num_topic_publisher_links,
+            LINK_TYPE.TOPIC_SUBSCRIBER: num_topic_subscriber_links,
+            LINK_TYPE.SERVICE_SERVER: num_service_server_links,
+            LINK_TYPE.SERVICE_CLIENT: num_service_client_links,
+            LINK_TYPE.ACTION_SERVER: num_action_server_links,
+            LINK_TYPE.ACTION_CLIENT: num_action_client_links,
+        }
         print(main_style)
         print(nodes_style)
         mermaid_graph = [
@@ -419,9 +413,12 @@ class GraphGenerator:
             topics_style,
             services_style,
             actions_style,
-            "\n".join(service_links),
-            "\n".join(action_links),
-            "\n".join(topic_links),
+            "\n".join(all_links[LINK_TYPE.TOPIC_PUBLISHER]),
+            "\n".join(all_links[LINK_TYPE.TOPIC_SUBSCRIBER]),
+            "\n".join(all_links[LINK_TYPE.SERVICE_SERVER]),
+            "\n".join(all_links[LINK_TYPE.SERVICE_CLIENT]),
+            "\n".join(all_links[LINK_TYPE.ACTION_SERVER]),
+            "\n".join(all_links[LINK_TYPE.ACTION_CLIENT]),
         ]
         mermaid_str = "\n".join(mermaid_graph)
         return mermaid_str, links_ranges

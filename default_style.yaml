@@ -20,10 +20,10 @@ links_display:
   action_client: "<==>"
 links_style:
   topics_publisher: None
-  topics_subscriber: None
+  topics_subscriber: fill:none,stroke:blue;
   services_server: None
   services_client: None
-  action_server: color:green;
-  action_client: color:green;
+  action_server: fill:none,stroke:green;
+  action_client: fill:none,stroke:green;
 display_keys: True
 
