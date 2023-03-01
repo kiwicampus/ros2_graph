@@ -24,100 +24,61 @@ from .graph_generator import GraphGenerator
 from .rosElement import ELEMENT_TYPE, LINK_TYPE
 
 
-def fromDictOrDefault(dictionary: Dict[str, str], key: str, default: str):
-    return dictionary[key] if key in dictionary else default
-
-
 def get_style(style_file: str):
     with open(style_file) as f:
         yaml_data = f.read()
     style_dict = yaml.load(yaml_data)
 
-    shapes = fromDictOrDefault(style_dict, "shapes", {})
-    colors = fromDictOrDefault(style_dict, "colors", {})
-    links_display = fromDictOrDefault(style_dict, "links_display", {})
-    links_style = fromDictOrDefault(style_dict, "links_style", {})
-    display_keys = fromDictOrDefault(style_dict, "display_keys", True)
+    shapes = style_dict.get("shapes", {})
+    colors = style_dict.get("colors", {})
+    links_display = style_dict.get("links_display", {})
+    links_style = style_dict.get("links_style", {})
+    display_keys = style_dict.get("display_keys", True)
 
     shapesDict = {
-        ELEMENT_TYPE.MAIN: fromDictOrDefault(shapes, "main", ["[", "]"]),
-        ELEMENT_TYPE.NODE: fromDictOrDefault(shapes, "node", ["[", "]"]),
-        ELEMENT_TYPE.TOPIC: fromDictOrDefault(shapes, "topic", ["([", "])"]),
-        ELEMENT_TYPE.SERVICE: fromDictOrDefault(shapes, "service", ["[/", "\\]"]),
-        ELEMENT_TYPE.ACTION: fromDictOrDefault(shapes, "action", ["{{", "}}"]),
+        ELEMENT_TYPE.MAIN: shapes.get("main", ["[", "]"]),
+        ELEMENT_TYPE.NODE: shapes.get("node", ["[", "]"]),
+        ELEMENT_TYPE.TOPIC: shapes.get("topic", ["([", "])"]),
+        ELEMENT_TYPE.SERVICE: shapes.get("service", ["[/", "\\]"]),
+        ELEMENT_TYPE.ACTION: shapes.get("action", ["{{", "}}"]),
     }
     colorsDict = {
-        ELEMENT_TYPE.MAIN: fromDictOrDefault(
-            colors,
-            "main",
-            "opacity:0.9,fill:#059,stroke:#09F,stroke-width:4px,color:#fff",
+        ELEMENT_TYPE.MAIN: colors.get(
+            "main", "opacity:0.9,fill:#059,stroke:#09F,stroke-width:4px,color:#fff"
         ),
-        ELEMENT_TYPE.NODE: fromDictOrDefault(
-            colors,
-            "node",
-            "opacity:0.9,fill:#2A0,stroke:#391,stroke-width:4px,color:#fff",
+        ELEMENT_TYPE.NODE: colors.get(
+            "node", "opacity:0.9,fill:#2A0,stroke:#391,stroke-width:4px,color:#fff"
         ),
-        ELEMENT_TYPE.TOPIC: fromDictOrDefault(
-            colors,
-            "topic",
-            "opacity:0.9,fill:#852,stroke:#CCC,stroke-width:2px,color:#fff",
+        ELEMENT_TYPE.TOPIC: colors.get(
+            "topic", "opacity:0.9,fill:#852,stroke:#CCC,stroke-width:2px,color:#fff"
         ),
-        ELEMENT_TYPE.SERVICE: fromDictOrDefault(
-            colors,
+        ELEMENT_TYPE.SERVICE: colors.get(
             "service",
             "opacity:0.9,fill:#3B8062,stroke:#3B6062,stroke-width:2px,color:#fff",
         ),
-        ELEMENT_TYPE.ACTION: fromDictOrDefault(
-            colors,
-            "action",
-            "opacity:0.9,fill:#66A,stroke:#225,stroke-width:2px,color:#fff",
+        ELEMENT_TYPE.ACTION: colors.get(
+            "action", "opacity:0.9,fill:#66A,stroke:#225,stroke-width:2px,color:#fff"
         ),
     }
-    no_conected = fromDictOrDefault(
-        colors,
-        "no_conected",
-        "opacity:0.9,fill:#933,stroke:#800,stroke-width:2px,color:#fff",
+    no_conected = colors.get(
+        "no_conected", "opacity:0.9,fill:#933,stroke:#800,stroke-width:2px,color:#fff"
     )
 
     linkStrs = {
-        LINK_TYPE.TOPIC_PUBLISHER: fromDictOrDefault(
-            links_display, "topics_publisher", "-->"
-        ),
-        LINK_TYPE.TOPIC_SUBSCRIBER: fromDictOrDefault(
-            links_display, "topics_subscriber", "-->"
-        ),
-        LINK_TYPE.SERVICE_SERVER: fromDictOrDefault(
-            links_display, "services_server", "o-.-o"
-        ),
-        LINK_TYPE.SERVICE_CLIENT: fromDictOrDefault(
-            links_display, "services_client", "<-.->"
-        ),
-        LINK_TYPE.ACTION_SERVER: fromDictOrDefault(
-            links_display, "action_server", "o==o"
-        ),
-        LINK_TYPE.ACTION_CLIENT: fromDictOrDefault(
-            links_display, "action_client", "<==>"
-        ),
+        LINK_TYPE.TOPIC_PUBLISHER: links_display.get("topics_publisher", "-->"),
+        LINK_TYPE.TOPIC_SUBSCRIBER: links_display.get("topics_subscriber", "-->"),
+        LINK_TYPE.SERVICE_SERVER: links_display.get("services_server", "o-.-o"),
+        LINK_TYPE.SERVICE_CLIENT: links_display.get("services_client", "<-.->"),
+        LINK_TYPE.ACTION_SERVER: links_display.get("action_server", "o==o"),
+        LINK_TYPE.ACTION_CLIENT: links_display.get("action_client", "<==>"),
     }
     linkStyle = {
-        LINK_TYPE.TOPIC_PUBLISHER: fromDictOrDefault(
-            links_style, "topics_publisher", None
-        ),
-        LINK_TYPE.TOPIC_SUBSCRIBER: fromDictOrDefault(
-            links_style, "topics_subscriber", None
-        ),
-        LINK_TYPE.SERVICE_SERVER: fromDictOrDefault(
-            links_style, "services_server", None
-        ),
-        LINK_TYPE.SERVICE_CLIENT: fromDictOrDefault(
-            links_style, "services_client", None
-        ),
-        LINK_TYPE.ACTION_SERVER: fromDictOrDefault(
-            links_style, "action_server", "color:green;"
-        ),
-        LINK_TYPE.ACTION_CLIENT: fromDictOrDefault(
-            links_style, "action_client", "color:green;"
-        ),
+        LINK_TYPE.TOPIC_PUBLISHER: links_style.get("topics_publisher", None),
+        LINK_TYPE.TOPIC_SUBSCRIBER: links_style.get("topics_subscriber", None),
+        LINK_TYPE.SERVICE_SERVER: links_style.get("services_server", None),
+        LINK_TYPE.SERVICE_CLIENT: links_style.get("services_client", None),
+        LINK_TYPE.ACTION_SERVER: links_style.get("action_server", "color:green;"),
+        LINK_TYPE.ACTION_CLIENT: links_style.get("action_client", "color:green;"),
     }
 
     style_settings = {
@@ -219,8 +180,8 @@ def main():
 
     links_numbers = {
         link_type: list(range(*ranges))
-        for link_type, ranges in links_ranges.items() 
-        if ranges[1] - ranges[0] > 0 
+        for link_type, ranges in links_ranges.items()
+        if ranges[1] - ranges[0] > 0
     }
 
     # Add keys box links
@@ -239,11 +200,17 @@ def main():
         if LINK_TYPE.ACTION_CLIENT in links_numbers:
             links_numbers[LINK_TYPE.ACTION_CLIENT].append(last_link + 5)
 
-    links_styles = "\n".join([
-        "linkStyle " + ",".join(map(str, numbers)) + " " + style_config["links_style"][link_type]
-        for link_type, numbers in links_numbers.items() 
-        if style_config["links_style"][link_type] != None and style_config["links_style"][link_type] != "None"
-    ])
+    links_styles = "\n".join(
+        [
+            "linkStyle "
+            + ",".join(map(str, numbers))
+            + " "
+            + style_config["links_style"][link_type]
+            for link_type, numbers in links_numbers.items()
+            if style_config["links_style"][link_type] != None
+            and style_config["links_style"][link_type] != "None"
+        ]
+    )
 
     colors = style_config["colors"]
     mermaid_style = [

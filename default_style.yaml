@@ -19,10 +19,10 @@ links_display:
   action_server: "o==o"
   action_client: "<==>"
 links_style:
-  topics_publisher: None
-  topics_subscriber: None
-  services_server: None
-  services_client: None
+  topics_publisher:
+  topics_subscriber:
+  services_server:
+  services_client:
   action_server: fill:none,stroke:green;
   action_client: fill:none,stroke:green;
 display_keys: True
