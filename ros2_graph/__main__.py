@@ -132,7 +132,8 @@ def main():
     action_links_style = (
         "linkStyle " + ",".join(map(str, action_links)) + " fill:none,stroke:green;"
     )
-    mermaid_style.append(action_links_style)
+    if action_links.__len__() > 0:
+        mermaid_style.append(action_links_style)
     # Turn list into str
     mermaid_style = "\n".join(mermaid_style)
 
