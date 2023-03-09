@@ -135,6 +135,26 @@ def filter_topics(topic: Tuple[str, str]) -> bool:
     return is_not_in_blacklist(topic, blacklist)
 
 
+def get_action_elements(node: str) -> Dict[str, Tuple[Tuple[str,str]]]:
+
+    # Define patterns for Actions get
+    patterns = {
+        "action_servers": ("Action Servers:", "Action Clients:"),
+        "action_client": ("Action Clients:",),
+    }
+
+    # print ros2 node info into a temporary file 
+    subprocess.check_output(f"ros2 node info {node} >> node_info.txt", shell=True)
+    elements = {
+        k: get_node_info_block(pattern, file_name="node_info.txt")
+        for k, pattern in patterns.items()
+    }
+    # Remove temporary file
+    subprocess.check_output("rm node_info.txt", shell=True)
+
+    return elements
+
+
 def get_topics_related_nodes(
     topics: List[ElementNameTypes], subscribers: bool
 ) -> ElementRelatedNodes:
@@ -271,22 +291,29 @@ def mermaid_topics(
         links_count += 1 + n_publishers
 
         style = "topic" if n_publishers else "bugged"
-        topic_node = f"{topic}([{topic}<br>{topic_info['type']}]):::{style}"
+        topic_node = f"\n{topic}([{topic}<br>{topic_info['type']}]):::{style}"
+        mermaid_topic_description.append(topic_node)
 
         if subscribers:
-            topic_node += f" --> {node}"
-            mermaid_topic_description.append(topic_node)
+            sub = f"{topic} --> {node}"
+            mermaid_topic_description.append(sub)
             mermaid_topic_description.extend(
-                [f"{node}:::node --> {topic}" for node in topic_info["nodes"]]
+                [f"{publishers} --> {topic}" for publishers in topic_info["nodes"]]
+            )
+            mermaid_topic_description.extend(
+                [f"{publishers}:::node" for publishers in topic_info["nodes"]]
             )
 
         else:
-            topic_node = f"{node} --> " + topic_node
-            mermaid_topic_description.append(topic_node)
+            pub = f"{node} --> {topic}"
+            mermaid_topic_description.append(pub)
             mermaid_topic_description.extend(
-                [f"{topic} --> {node}:::node" for node in topic_info["nodes"]]
+                [f"{topic} --> {subscribers}" for subscribers in topic_info["nodes"]]
             )
-
+            mermaid_topic_description.extend(
+                [f"{subscribers}:::node" for subscribers in topic_info["nodes"]]
+            )
+        
     return mermaid_topic_description, links_count
 
 
@@ -309,18 +336,25 @@ def mermaid_services(
 
         style = "service" if n_clients else "bugged"
         service_node = f"{service}[/{service}<br>{service_info['type']}\]:::{style}"
+        mermaid_service_description.append(service_node)
 
         if clients:
-            service_node = f"{node} o-.-o " + service_node
-            mermaid_service_description.append(service_node)
+            server = f"{node} o-.-o {service}"
+            mermaid_service_description.append(server)
             mermaid_service_description.extend(
-                [f"{service} <-.-> {node}:::node" for node in service_info["nodes"]]
+                [f"{service} <-.-> {node}" for node in service_info["nodes"]]
+            )
+            mermaid_service_description.extend(
+                [f"{node}:::node" for node in service_info["nodes"]]
             )
         else:
-            service_node = service_node + f" <-.-> {node}"
-            mermaid_service_description.append(service_node)
+            client = f"{service} <-.-> {node}"
+            mermaid_service_description.append(client)
             mermaid_service_description.extend(
-                [f"{node}:::node  o-.-o {service}" for node in service_info["nodes"]]
+                [f"{node} o-.-o {service}" for node in service_info["nodes"]]
+            )
+            mermaid_service_description.extend(
+                [f"{node}:::node" for node in service_info["nodes"]]
             )
 
     return mermaid_service_description, links_count
@@ -349,55 +383,61 @@ def mermaid_actions(
         action_node = (
             action + "{{" + action + "<br>" + action_info["type"] + "}}:::" + style
         )
+        mermaid_action_description.append(action_node)
 
         if clients:
-            action_node = f"{node} <==> " + action_node
-            mermaid_action_description.append(action_node)
+            server = f"{node} o==o {action}"
+            mermaid_action_description.append(server)
             mermaid_action_description.extend(
-                [f"{action} o==o {node}:::node" for node in action_info["nodes"]]
+                [f"{client} <==> {node}" for client in action_info["nodes"]]
+            )
+            mermaid_action_description.extend(
+                [f"{client}:::node" for client in action_info["nodes"]]
             )
         else:
-            action_node += f" o==o {node}"
-            mermaid_action_description.append(action_node)
+            client = f"{action} <==> {node}"
+            mermaid_action_description.append(client)
             mermaid_action_description.extend(
-                [f"{node}:::node <==> {action}" for node in action_info["nodes"]]
+                [f"{server} o==o {action}" for server in action_info["nodes"]]
+            )
+            mermaid_action_description.extend(
+                [f"{server}:::node" for server in action_info["nodes"]]
             )
     return mermaid_action_description, links_count
 
 
 def get_node_graph(node, links_count):
 
-    patterns = {
-        "action_servers": ("Action Servers:", "Action Clients:"),
-        "action_client": ("Action Clients:",),
-    }
-
-    subprocess.check_output(f"ros2 node info {node} >> node_info.txt", shell=True)
-    elements = {
-        k: get_node_info_block(pattern, file_name="node_info.txt")
-        for k, pattern in patterns.items()
-    }
-    subprocess.check_output("rm node_info.txt", shell=True)
-    action_clients = get_actions_related_nodes(elements["action_servers"], clients=True)
-    action_servers = get_actions_related_nodes(elements["action_client"], clients=False)
-
+    # Create rclpy standard name and namespace
     namespace_name = node.split("/")
     name = namespace_name[-1]
     namespace = "/".join(namespace_name[:-1])
     if namespace == "":
         namespace = "/"
     name_and_namespace = (name, namespace)
+    
+    # Get action related nodes
+    elements = get_action_elements(node)
+    action_clients = get_actions_related_nodes(elements["action_servers"], clients=True)
+    action_servers = get_actions_related_nodes(elements["action_client"], clients=False)
 
+    # Get topics subscribers
     subscribers = dummy.get_subscriber_names_and_types_by_node(*name_and_namespace)
-    publishers = dummy.get_publisher_names_and_types_by_node(*name_and_namespace)
-    services_server = dummy.get_service_names_and_types_by_node(*name_and_namespace)
-    services_client = dummy.get_client_names_and_types_by_node(*name_and_namespace)
-
     topics_subscribers = get_topics_related_nodes(subscribers, subscribers=True)
+
+    # Get topics publishers
+    publishers = dummy.get_publisher_names_and_types_by_node(*name_and_namespace)
     topics_publishers = get_topics_related_nodes(publishers, subscribers=False)
+
+    # Get services servers
+    services_server = dummy.get_service_names_and_types_by_node(*name_and_namespace)
     service_clients = get_services_related_nodes(services_server, clients=True)
+
+    # Get services clients
+    services_client = dummy.get_client_names_and_types_by_node(*name_and_namespace)
     service_servers = get_services_related_nodes(services_client, clients=False)
 
+    # Create mermaid string
     mermaid_graph_description, links_count_subs = mermaid_topics(
         node, topics_subscribers, subscribers=True
     )
@@ -422,16 +462,17 @@ def get_node_graph(node, links_count):
 
     start_action_links = links_count
     mermaid_list, links_count_aclients = mermaid_actions(
-        node, action_clients, clients=False
+        node, action_clients, clients=True
     )
     mermaid_graph_description.extend(mermaid_list)
     links_count += links_count_aclients
     mermaid_list, links_count_aserver = mermaid_actions(
-        node, action_servers, clients=True
+        node, action_servers, clients=False
     )
     mermaid_graph_description.extend(mermaid_list)
     links_count += links_count_aserver
 
+    # Create list of action links for style 
     action_links = list(range(start_action_links, links_count))
 
     return mermaid_graph_description, action_links, links_count
