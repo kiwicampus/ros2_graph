@@ -19,7 +19,7 @@ from os.path import splitext
 from os import remove
 from functools import reduce
 
-from graph_generator import get_node_graph
+from .graph_generator import get_node_graph
 
 
 def main():
