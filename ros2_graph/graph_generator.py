@@ -134,6 +134,7 @@ def filter_topics(topic: Tuple[str, str]) -> bool:
 
     return is_not_in_blacklist(topic, blacklist)
 
+
 def get_action_elements(node: str) -> Dict[str, Tuple[Tuple[str,str]]]:
 
     # Define patterns for Actions get
@@ -305,7 +306,7 @@ def mermaid_topics(
             mermaid_topic_description.extend(
                 [f"{topic} --> {node}:::node" for node in topic_info["nodes"]]
             )
-
+        
     return mermaid_topic_description, links_count
 
 
@@ -385,11 +386,6 @@ def mermaid_actions(
 
 
 def get_node_graph(node, links_count):
-    
-    # Get action related nodes
-    elements = get_action_elements(node)
-    action_clients = get_actions_related_nodes(elements["action_servers"], clients=True)
-    action_servers = get_actions_related_nodes(elements["action_client"], clients=False)
 
     # Create rclpy standard name and namespace
     namespace_name = node.split("/")
@@ -398,6 +394,11 @@ def get_node_graph(node, links_count):
     if namespace == "":
         namespace = "/"
     name_and_namespace = (name, namespace)
+    
+    # Get action related nodes
+    elements = get_action_elements(node)
+    action_clients = get_actions_related_nodes(elements["action_servers"], clients=True)
+    action_servers = get_actions_related_nodes(elements["action_client"], clients=False)
 
     # Get topics subscribers
     subscribers = dummy.get_subscriber_names_and_types_by_node(*name_and_namespace)
@@ -450,6 +451,7 @@ def get_node_graph(node, links_count):
     mermaid_graph_description.extend(mermaid_list)
     links_count += links_count_aserver
 
+    # Create list of action links for style 
     action_links = list(range(start_action_links, links_count))
 
     return mermaid_graph_description, action_links, links_count
