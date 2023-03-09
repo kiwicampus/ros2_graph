@@ -367,17 +367,21 @@ def mermaid_actions(
 
 def get_node_graph(node, links_count):
 
+    # Define patterns for Actions get
     patterns = {
         "action_servers": ("Action Servers:", "Action Clients:"),
         "action_client": ("Action Clients:",),
     }
 
+    # print ros2 node info into a temporary file 
     subprocess.check_output(f"ros2 node info {node} >> node_info.txt", shell=True)
     elements = {
         k: get_node_info_block(pattern, file_name="node_info.txt")
         for k, pattern in patterns.items()
     }
+    # Remove temporary file
     subprocess.check_output("rm node_info.txt", shell=True)
+    
     action_clients = get_actions_related_nodes(elements["action_servers"], clients=True)
     action_servers = get_actions_related_nodes(elements["action_client"], clients=False)
 
