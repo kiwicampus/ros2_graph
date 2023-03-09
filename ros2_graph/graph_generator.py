@@ -134,6 +134,25 @@ def filter_topics(topic: Tuple[str, str]) -> bool:
 
     return is_not_in_blacklist(topic, blacklist)
 
+def get_action_elements(node: str) -> Dict[str, Tuple[Tuple[str,str]]]:
+
+    # Define patterns for Actions get
+    patterns = {
+        "action_servers": ("Action Servers:", "Action Clients:"),
+        "action_client": ("Action Clients:",),
+    }
+
+    # print ros2 node info into a temporary file 
+    subprocess.check_output(f"ros2 node info {node} >> node_info.txt", shell=True)
+    elements = {
+        k: get_node_info_block(pattern, file_name="node_info.txt")
+        for k, pattern in patterns.items()
+    }
+    # Remove temporary file
+    subprocess.check_output("rm node_info.txt", shell=True)
+
+    return elements
+
 
 def get_topics_related_nodes(
     topics: List[ElementNameTypes], subscribers: bool
@@ -366,25 +385,13 @@ def mermaid_actions(
 
 
 def get_node_graph(node, links_count):
-
-    # Define patterns for Actions get
-    patterns = {
-        "action_servers": ("Action Servers:", "Action Clients:"),
-        "action_client": ("Action Clients:",),
-    }
-
-    # print ros2 node info into a temporary file 
-    subprocess.check_output(f"ros2 node info {node} >> node_info.txt", shell=True)
-    elements = {
-        k: get_node_info_block(pattern, file_name="node_info.txt")
-        for k, pattern in patterns.items()
-    }
-    # Remove temporary file
-    subprocess.check_output("rm node_info.txt", shell=True)
     
+    # Get action related nodes
+    elements = get_action_elements(node)
     action_clients = get_actions_related_nodes(elements["action_servers"], clients=True)
     action_servers = get_actions_related_nodes(elements["action_client"], clients=False)
 
+    # Create rclpy standard name and namespace
     namespace_name = node.split("/")
     name = namespace_name[-1]
     namespace = "/".join(namespace_name[:-1])
@@ -392,16 +399,23 @@ def get_node_graph(node, links_count):
         namespace = "/"
     name_and_namespace = (name, namespace)
 
+    # Get topics subscribers
     subscribers = dummy.get_subscriber_names_and_types_by_node(*name_and_namespace)
-    publishers = dummy.get_publisher_names_and_types_by_node(*name_and_namespace)
-    services_server = dummy.get_service_names_and_types_by_node(*name_and_namespace)
-    services_client = dummy.get_client_names_and_types_by_node(*name_and_namespace)
-
     topics_subscribers = get_topics_related_nodes(subscribers, subscribers=True)
+
+    # Get topics publishers
+    publishers = dummy.get_publisher_names_and_types_by_node(*name_and_namespace)
     topics_publishers = get_topics_related_nodes(publishers, subscribers=False)
+
+    # Get services servers
+    services_server = dummy.get_service_names_and_types_by_node(*name_and_namespace)
     service_clients = get_services_related_nodes(services_server, clients=True)
+
+    # Get services clients
+    services_client = dummy.get_client_names_and_types_by_node(*name_and_namespace)
     service_servers = get_services_related_nodes(services_client, clients=False)
 
+    # Create mermaid string
     mermaid_graph_description, links_count_subs = mermaid_topics(
         node, topics_subscribers, subscribers=True
     )
