@@ -291,20 +291,21 @@ def mermaid_topics(
         links_count += 1 + n_publishers
 
         style = "topic" if n_publishers else "bugged"
-        topic_node = f"{topic}([{topic}<br>{topic_info['type']}]):::{style}"
+        topic_node = f"\n{topic}([{topic}<br>{topic_info['type']}]):::{style}"
+        mermaid_topic_description.append(topic_node)
 
         if subscribers:
-            topic_node += f" --> {node}"
-            mermaid_topic_description.append(topic_node)
+            sub = f"{topic} --> {node}"
+            mermaid_topic_description.append(sub)
             mermaid_topic_description.extend(
-                [f"{node}:::node --> {topic}" for node in topic_info["nodes"]]
+                [f"{publishers}:::node --> {topic}" for publishers in topic_info["nodes"]]
             )
 
         else:
-            topic_node = f"{node} --> " + topic_node
-            mermaid_topic_description.append(topic_node)
+            pub = f"{node} --> {topic}"
+            mermaid_topic_description.append(pub)
             mermaid_topic_description.extend(
-                [f"{topic} --> {node}:::node" for node in topic_info["nodes"]]
+                [f"{topic} --> {subscribers}:::node" for subscribers in topic_info["nodes"]]
             )
         
     return mermaid_topic_description, links_count
@@ -329,16 +330,17 @@ def mermaid_services(
 
         style = "service" if n_clients else "bugged"
         service_node = f"{service}[/{service}<br>{service_info['type']}\]:::{style}"
+        mermaid_service_description.append(service_node)
 
         if clients:
-            service_node = f"{node} o-.-o " + service_node
-            mermaid_service_description.append(service_node)
+            server = f"{node} o-.-o " + {service}
+            mermaid_service_description.append(server)
             mermaid_service_description.extend(
                 [f"{service} <-.-> {node}:::node" for node in service_info["nodes"]]
             )
         else:
-            service_node = service_node + f" <-.-> {node}"
-            mermaid_service_description.append(service_node)
+            client = f"{service} <-.-> {node}"
+            mermaid_service_description.append(client)
             mermaid_service_description.extend(
                 [f"{node}:::node  o-.-o {service}" for node in service_info["nodes"]]
             )
@@ -369,18 +371,19 @@ def mermaid_actions(
         action_node = (
             action + "{{" + action + "<br>" + action_info["type"] + "}}:::" + style
         )
+        mermaid_action_description.append(action_node)
 
         if clients:
-            action_node = f"{node} <==> " + action_node
-            mermaid_action_description.append(action_node)
+            server = f"{node} <==> {action}"
+            mermaid_action_description.append(server)
             mermaid_action_description.extend(
-                [f"{action} o==o {node}:::node" for node in action_info["nodes"]]
+                [f"{client} o==o {node}:::node" for client in action_info["nodes"]]
             )
         else:
-            action_node += f" o==o {node}"
-            mermaid_action_description.append(action_node)
+            client = f"{action} o==o {node}"
+            mermaid_action_description.append(client)
             mermaid_action_description.extend(
-                [f"{node}:::node <==> {action}" for node in action_info["nodes"]]
+                [f"{server}:::node <==> {action}" for server in action_info["nodes"]]
             )
     return mermaid_action_description, links_count
 
