@@ -110,16 +110,13 @@ def main():
             "end",
             "style keys opacity:0.15,fill:#FFF",
             "style nodes opacity:0.15,fill:#FFF",
-            "style connection opacity:0.15,fill:#FFF",
-            " ",
+            "style connection opacity:0.15,fill:#FFF\n",
         ]
     )
     # Add action links of conventions sub graph (the 4th and the 5th)
-    action_links.extend([links_count + 4, links_count + 5])
-    # Add action links style
-    action_links_style = (
-        "linkStyle " + ",".join(map(str, action_links)) + " fill:none,stroke:green;"
-    )
+    keys_action_links = [links_count + 4, links_count + 5]
+    mermaid_convention += "linkStyle " + ",".join(
+        map(str, keys_action_links)) + " fill:none,stroke:green;\n"
 
     # Add class definition and styles
     mermaid_style = [
@@ -131,6 +128,10 @@ def main():
         "classDef main_node opacity:0.9,fill:#059,stroke:#09F,stroke-width:4px,color:#fff",
         "classDef bugged opacity:0.9,fill:#933,stroke:#800,stroke-width:2px,color:#fff",
     ]
+    # Add action links style
+    action_links_style = (
+        "linkStyle " + ",".join(map(str, action_links)) + " fill:none,stroke:green;"
+    )
     mermaid_style.append(action_links_style)
     # Turn list into str
     mermaid_style = "\n".join(mermaid_style)
