@@ -84,7 +84,6 @@ def main():
     links_count = links_count - (len(nodes_description) - len(no_duplicates))
     nodes_description = "\n".join(no_duplicates)
 
-
     # Add main nodes style
     main_nodes_style = reduce(lambda a, node: a + f"{node}:::main_node\n", nodes, "")
 
@@ -138,7 +137,7 @@ def main():
     mermaid_style = "\n".join(mermaid_style)
 
     # Define mermaid flowchart header
-    heading = "\n```mermaid\nflowchart LR\n"
+    heading = "\n```mermaid\nflowchart LR"
 
     # Join texts for final result
     mermaid_graph = "\n".join(
@@ -157,7 +156,7 @@ def main():
         print(mermaid_graph)
         return
 
-    with open(out_file + ".md", "a") as file:
+    with open(out_file + ".md", "w") as file:
         file.write(mermaid_graph)
 
     # Save .md file
