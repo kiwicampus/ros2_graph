@@ -175,3 +175,37 @@ style nodes opacity:0.15,fill:#FFF
 style connection opacity:0.15,fill:#FFF
 ```
 
+## Custom syle
+
+For custom mermaid styles use the `--styleConfig` flag to load a style .yaml file, it must look like this (Example with the default values, if a field is not defined the default will be used):
+
+```yaml
+shapes:
+  main: ["[", "]"]
+  node: ["[", "]"]
+  topic: ["([", "])"]
+  service: ["[/", "\\]"]
+  action: ["{{", "}}"]
+colors:
+    main: "opacity:0.9,fill:#059,stroke:#09F,stroke-width:4px,color:#fff"
+    node: "opacity:0.9,fill:#2A0,stroke:#391,stroke-width:4px,color:#fff"
+    topic: "opacity:0.9,fill:#852,stroke:#CCC,stroke-width:2px,color:#fff"
+    service: "opacity:0.9,fill:#3B8062,stroke:#3B6062,stroke-width:2px,color:#fff"
+    action: "opacity:0.9,fill:#66A,stroke:#225,stroke-width:2px,color:#fff"
+    no_conected: "opacity:0.9,fill:#933,stroke:#800,stroke-width:2px,color:#fff"
+links_display:
+  topics_publisher: "-->"
+  topics_subscriber: "-->"
+  services_server: "o-.-o"
+  services_client: "<-.->"
+  action_server: "o==o"
+  action_client: "<==>"
+links_style:
+  topics_publisher:
+  topics_subscriber:
+  services_server:
+  services_client:
+  action_server: fill:none,stroke:green;
+  action_client: fill:none,stroke:green;
+display_keys: True
+```
