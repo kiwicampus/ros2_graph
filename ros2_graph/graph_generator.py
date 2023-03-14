@@ -35,7 +35,7 @@ ElementRelatedNodes = Dict[str, RelatedNodes]
 
 
 class GraphGenerator:
-    def __init__(self, style_config):
+    def __init__(self, style_config: Dict[str, any]):
         rclpy.init()
         self.dummy = Node("Graph_generator")
         self.ros_node_info_file = "node_info.txt"
@@ -48,15 +48,18 @@ class GraphGenerator:
         self.link_strs = style_config["links_str"]
         self.brackets = style_config["shapes"]
 
-    def newNoNode(
+    def new_no_node(
         self, new_element: NoNodeElement, elemt_dict: Dict[int, NoNodeElement]
     ) -> NoNodeElement:
+        """!
+        Add new_element to the elemt_dict if it not already exist
+        """
         new_hash = hash(new_element)
         if new_hash not in elemt_dict:
             elemt_dict[new_hash] = new_element
         return elemt_dict[new_hash]
 
-    def newAction(self, data: Tuple[str]) -> NoNodeElement:
+    def new_action(self, data: Tuple[str]) -> NoNodeElement:
         """! Initialize a NoNodeElement action object form a string tuple (name, namespace, ros_type) or return the already existing action
         @param action data tuples (name, namespace, ros_type)
         @return NoNodeElement action object
@@ -68,17 +71,17 @@ class GraphGenerator:
             type=ElementType.ACTION,
             brackets=self.brackets[ElementType.ACTION],
         )
-        return self.newNoNode(new_action, self.actions)
+        return self.new_no_node(new_action, self.actions)
 
-    def actionsTuple(self, actions_data: Tuple[Tuple[str]]) -> Tuple[NoNodeElement]:
+    def actions_tuple(self, actions_data: Tuple[Tuple[str]]) -> Tuple[NoNodeElement]:
         """!
         create a group of actions objects from a tuple of data
         @param actions_data actions info in (name, namespace, ros_type) format
         @return a tuple of NoNodeElement action objects
         """
-        return tuple(self.newAction(data) for data in actions_data)
+        return tuple(self.new_action(data) for data in actions_data)
 
-    def newTopic(self, name: str, namespace: str, ros_type: str) -> NoNodeElement:
+    def new_topic(self, name: str, namespace: str, ros_type: str) -> NoNodeElement:
         """! Initialize a NoNodeElement topic object form a string tuple (name, namespace, ros_type) or return the already existing action
         @param topic data tuples (name, namespace, ros_type)
         @return NoNodeElement topic object
@@ -90,9 +93,9 @@ class GraphGenerator:
             type=ElementType.TOPIC,
             brackets=self.brackets[ElementType.TOPIC],
         )
-        return self.newNoNode(new_topic, self.topics)
+        return self.new_no_node(new_topic, self.topics)
 
-    def newService(self, name: str, namespace: str, ros_type: str) -> NoNodeElement:
+    def new_service(self, name: str, namespace: str, ros_type: str) -> NoNodeElement:
         """! Initialize a NoNodeElement service object form a string tuple (name, namespace, ros_type) or return the already existing action
         @param service data tuples (name, namespace, ros_type)
         @return NoNodeElement service object
@@ -104,9 +107,9 @@ class GraphGenerator:
             type=ElementType.SERVICE,
             brackets=self.brackets[ElementType.SERVICE],
         )
-        return self.newNoNode(new_service, self.services)
+        return self.new_no_node(new_service, self.services)
 
-    def getActions(self, node: str) -> Dict[str, Tuple[NoNodeElement]]:
+    def get_actions(self, node: str) -> Dict[str, Tuple[NoNodeElement]]:
         """! Get Action related to some node
         @param node, the node to inspect its actions
         """
@@ -117,7 +120,7 @@ class GraphGenerator:
 
         rcu.save_ros_node_info(node_name=node, file=self.ros_node_info_file)
         elements = {
-            k: self.actionsTuple(
+            k: self.actions_tuple(
                 rcu.get_node_info_block(pattern, file=self.ros_node_info_file)
             )
             for k, pattern in patterns.items()
@@ -127,7 +130,7 @@ class GraphGenerator:
 
         return elements
 
-    def newNode(self, name: str, namespace: str) -> NodeElement:
+    def new_node(self, name: str, namespace: str) -> NodeElement:
         """! Create a new node if is not already created given its data
         and return it
         @param data a tuple (name, namespace)
@@ -146,13 +149,13 @@ class GraphGenerator:
             self.nodes[node_hash] = new_node
         return self.nodes[node_hash]
 
-    def nodesFromData(self, nodes_data: Tuple[Tuple[str]]) -> Tuple[NodeElement]:
+    def nodes_from_data(self, nodes_data: Tuple[Tuple[str]]) -> Tuple[NodeElement]:
         """!
         create a group of nodes objects from a tuple of data
         @param nodes_data: nodes info in (name, namespace) format
         @return a tuple of NodeElement objects
         """
-        return tuple((self.newNode(*node) for node in nodes_data))
+        return tuple((self.new_node(*node) for node in nodes_data))
 
     def filter_topics(self, topic: Tuple[str, str]) -> bool:
         """! To filter undesired topics
@@ -197,11 +200,11 @@ class GraphGenerator:
         for topic in filter(self.filter_topics, topics):
             name, namespace = rcu.split_full_name(topic[0])
             ros_type = "<br>".join(topic[1])
-            topicObj = self.newTopic(name, namespace, ros_type)
+            topicObj = self.new_topic(name, namespace, ros_type)
             endpoints = get_endpoints_function(topic[0])
 
             nodes = [
-                self.newNode(endpoint.node_name, endpoint.node_namespace)
+                self.new_node(endpoint.node_name, endpoint.node_namespace)
                 for endpoint in endpoints
             ]
             topics_and_nodes[topicObj] = nodes
@@ -253,18 +256,18 @@ class GraphGenerator:
                 filter((lambda service: service in services_names), services)
             )
             for service in filtered_services:
-                services_and_nodes[service]["nodes"].append(self.newNode(*node))
+                services_and_nodes[service]["nodes"].append(self.new_node(*node))
 
         services_and_nodesObj = {}
         for service, sub_dict in services_and_nodes.items():
             name, namespace = rcu.split_full_name(service)
             ros_type = sub_dict["type"]
-            serviceObj = self.newService(name, namespace, ros_type)
+            serviceObj = self.new_service(name, namespace, ros_type)
             services_and_nodesObj[serviceObj] = sub_dict["nodes"]
 
         return services_and_nodesObj
 
-    def createLinks(
+    def create_links(
         self,
         main_node: NodeElement,
         relations: Dict[NoNodeElement, List[NodeElement]],
@@ -296,21 +299,21 @@ class GraphGenerator:
             return
         self.mainNodes[main_hash] = newMain
 
-        elements = self.getActions(node)
+        elements = self.get_actions(node)
 
         action_clients_data = {
             action: rcu.get_action_related_nodes(action.full_name(), clients=True)
             for action in elements["action_servers"]
         }
         action_clients = {
-            k: self.nodesFromData(v) for k, v in action_clients_data.items()
+            k: self.nodes_from_data(v) for k, v in action_clients_data.items()
         }
         action_servers_data = {
             action: rcu.get_action_related_nodes(action.full_name(), clients=False)
             for action in elements["action_client"]
         }
         action_servers = {
-            k: self.nodesFromData(v) for k, v in action_servers_data.items()
+            k: self.nodes_from_data(v) for k, v in action_servers_data.items()
         }
         subscribers = self.dummy.get_subscriber_names_and_types_by_node(name, namespace)
         publishers = self.dummy.get_publisher_names_and_types_by_node(name, namespace)
@@ -328,32 +331,32 @@ class GraphGenerator:
             services_client, clients=False
         )
 
-        self.createLinks(
+        self.create_links(
             main_node=newMain,
             relations=topics_subscribers,
             link_type=LinkType.TOPIC_SUBSCRIBER,
         )
-        self.createLinks(
+        self.create_links(
             main_node=newMain,
             relations=topics_publishers,
             link_type=LinkType.TOPIC_PUBLISHER,
         )
-        self.createLinks(
+        self.create_links(
             main_node=newMain,
             relations=service_clients,
             link_type=LinkType.SERVICE_CLIENT,
         )
-        self.createLinks(
+        self.create_links(
             main_node=newMain,
             relations=service_servers,
             link_type=LinkType.SERVICE_SERVER,
         )
-        self.createLinks(
+        self.create_links(
             main_node=newMain,
             relations=action_clients,
             link_type=LinkType.ACTION_CLIENT,
         )
-        self.createLinks(
+        self.create_links(
             main_node=newMain,
             relations=action_servers,
             link_type=LinkType.ACTION_SERVER,
