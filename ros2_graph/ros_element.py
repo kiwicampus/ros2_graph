@@ -22,30 +22,16 @@ class ElementType(Enum):
     """!
     Enumeration class for ROS element types
     """
-
     MAIN = 0
     NODE = 1
     TOPIC = 2
     SERVICE = 3
     ACTION = 4
-
-
-def element_style(element_type: ElementType) -> str:
-    """!
-    Just map element types and and it's string
-    """
-    if element_type == ElementType.MAIN:
-        return "main"
-    if element_type == ElementType.NODE:
-        return "node"
-    if element_type == ElementType.TOPIC:
-        return "topic"
-    if element_type == ElementType.SERVICE:
-        return "service"
-    if element_type == ElementType.ACTION:
-        return "action"
-    return "default"
-
+    def __str__(self):
+        """!
+        Just map element types and and it's string
+        """
+        return self.name.lower()
 
 class LinkType(Enum):
     """!
@@ -126,7 +112,7 @@ class NoNodeElement(RosElement):
     def __str__(self) -> str:
         name = self.full_name()
         style = (
-            element_style(self.type)
+            str(self.type)
             if self.from_connected and self.to_connected
             else "bugged"
         )
@@ -177,7 +163,7 @@ class NodeElement(RosElement):
     brackets: List[str]
 
     def __post_init__(self):
-        self.links: List[Dict[int, Link]] = [dict() for i in range(6)]
+        self.links: List[Dict[int, Link]] = [dict() for i in range(len(LinkType))]
 
     def add_link(
         self, linked_element: NoNodeElement, link_str: str, link_type: LinkType
@@ -216,7 +202,7 @@ class NodeElement(RosElement):
 
     def __str__(self):
         name = self.full_name()
-        return f"{name}{self.brackets[0]} {name} {self.brackets[1]}:::{element_style(self.type)}"
+        return f"{name}{self.brackets[0]} {name} {self.brackets[1]}:::{self.type}"
 
     def __eq__(self, another) -> bool:
         return self.name == another.name and self.namespace == another.namespace
