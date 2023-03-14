@@ -36,6 +36,9 @@ ElementRelatedNodes = Dict[str, RelatedNodes]
 
 class GraphGenerator:
     def __init__(self, style_config: Dict[str, any]):
+        """!
+            style_config: style .yaml values as dictionary
+        """
         rclpy.init()
         self.dummy = Node("Graph_generator")
         self.ros_node_info_file = "node_info.txt"
@@ -285,7 +288,10 @@ class GraphGenerator:
             for node in nodes:
                 node.add_link(linked_element, link_str2, link_type)
 
-    def get_node_graph(self, node):
+    def get_node_graph(self, node: str):
+        """!
+        get relashionship links from some ros2 node
+        """
         name, namespace = rcu.split_full_name(node)
         newMain = NodeElement(
             name,
@@ -365,6 +371,10 @@ class GraphGenerator:
     def get_nodes_mermaid(
         self, nodes: Dict[int, NodeElement]
     ) -> Tuple[str, Dict[LinkType, List[str]]]:
+        """!
+            get mermaid graph description from a node and
+            its relationships whit other elements
+        """
         nodes_list = [str(val) for val in nodes.values()]
         nodes_mermaid = "\n".join(nodes_list)
 
@@ -379,6 +389,10 @@ class GraphGenerator:
         return nodes_mermaid, links_mermaid
 
     def get_mermaid(self) -> Tuple[str, Tuple[Tuple[int, int]]]:
+        """!
+            get mermaid graph description from all requested nodes
+            and concatenate it
+        """
         main_style, str_main_links = self.get_nodes_mermaid(self.mainNodes)
         nodes_style, str_nodes_links = self.get_nodes_mermaid(self.nodes)
 
