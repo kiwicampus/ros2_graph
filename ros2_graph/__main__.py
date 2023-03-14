@@ -21,7 +21,7 @@ from typing import Dict
 import yaml
 
 from .graph_generator import GraphGenerator
-from .rosElement import ELEMENT_TYPE, LINK_TYPE
+from .ros_element import ElementType, LinkType
 
 
 def get_style(style_file: str):
@@ -36,27 +36,27 @@ def get_style(style_file: str):
     display_keys = style_dict.get("display_keys", True)
 
     shapesDict = {
-        ELEMENT_TYPE.MAIN: shapes.get("main", ["[", "]"]),
-        ELEMENT_TYPE.NODE: shapes.get("node", ["[", "]"]),
-        ELEMENT_TYPE.TOPIC: shapes.get("topic", ["([", "])"]),
-        ELEMENT_TYPE.SERVICE: shapes.get("service", ["[/", "\\]"]),
-        ELEMENT_TYPE.ACTION: shapes.get("action", ["{{", "}}"]),
+        ElementType.MAIN: shapes.get("main", ["[", "]"]),
+        ElementType.NODE: shapes.get("node", ["[", "]"]),
+        ElementType.TOPIC: shapes.get("topic", ["([", "])"]),
+        ElementType.SERVICE: shapes.get("service", ["[/", "\\]"]),
+        ElementType.ACTION: shapes.get("action", ["{{", "}}"]),
     }
     colorsDict = {
-        ELEMENT_TYPE.MAIN: colors.get(
+        ElementType.MAIN: colors.get(
             "main", "opacity:0.9,fill:#059,stroke:#09F,stroke-width:4px,color:#fff"
         ),
-        ELEMENT_TYPE.NODE: colors.get(
+        ElementType.NODE: colors.get(
             "node", "opacity:0.9,fill:#2A0,stroke:#391,stroke-width:4px,color:#fff"
         ),
-        ELEMENT_TYPE.TOPIC: colors.get(
+        ElementType.TOPIC: colors.get(
             "topic", "opacity:0.9,fill:#852,stroke:#CCC,stroke-width:2px,color:#fff"
         ),
-        ELEMENT_TYPE.SERVICE: colors.get(
+        ElementType.SERVICE: colors.get(
             "service",
             "opacity:0.9,fill:#3B8062,stroke:#3B6062,stroke-width:2px,color:#fff",
         ),
-        ELEMENT_TYPE.ACTION: colors.get(
+        ElementType.ACTION: colors.get(
             "action", "opacity:0.9,fill:#66A,stroke:#225,stroke-width:2px,color:#fff"
         ),
     }
@@ -65,20 +65,20 @@ def get_style(style_file: str):
     )
 
     linkStrs = {
-        LINK_TYPE.TOPIC_PUBLISHER: links_display.get("topics_publisher", "-->"),
-        LINK_TYPE.TOPIC_SUBSCRIBER: links_display.get("topics_subscriber", "-->"),
-        LINK_TYPE.SERVICE_SERVER: links_display.get("services_server", "o-.-o"),
-        LINK_TYPE.SERVICE_CLIENT: links_display.get("services_client", "<-.->"),
-        LINK_TYPE.ACTION_SERVER: links_display.get("action_server", "o==o"),
-        LINK_TYPE.ACTION_CLIENT: links_display.get("action_client", "<==>"),
+        LinkType.TOPIC_PUBLISHER: links_display.get("topics_publisher", "-->"),
+        LinkType.TOPIC_SUBSCRIBER: links_display.get("topics_subscriber", "-->"),
+        LinkType.SERVICE_SERVER: links_display.get("services_server", "o-.-o"),
+        LinkType.SERVICE_CLIENT: links_display.get("services_client", "<-.->"),
+        LinkType.ACTION_SERVER: links_display.get("action_server", "o==o"),
+        LinkType.ACTION_CLIENT: links_display.get("action_client", "<==>"),
     }
     linkStyle = {
-        LINK_TYPE.TOPIC_PUBLISHER: links_style.get("topics_publisher", None),
-        LINK_TYPE.TOPIC_SUBSCRIBER: links_style.get("topics_subscriber", None),
-        LINK_TYPE.SERVICE_SERVER: links_style.get("services_server", None),
-        LINK_TYPE.SERVICE_CLIENT: links_style.get("services_client", None),
-        LINK_TYPE.ACTION_SERVER: links_style.get("action_server", "color:green;"),
-        LINK_TYPE.ACTION_CLIENT: links_style.get("action_client", "color:green;"),
+        LinkType.TOPIC_PUBLISHER: links_style.get("topics_publisher", None),
+        LinkType.TOPIC_SUBSCRIBER: links_style.get("topics_subscriber", None),
+        LinkType.SERVICE_SERVER: links_style.get("services_server", None),
+        LinkType.SERVICE_CLIENT: links_style.get("services_client", None),
+        LinkType.ACTION_SERVER: links_style.get("action_server", "color:green;"),
+        LinkType.ACTION_CLIENT: links_style.get("action_client", "color:green;"),
     }
 
     style_settings = {
@@ -159,17 +159,17 @@ def main():
                 "subgraph keys[<b>Keys<b/>]",
                 "subgraph nodes[<b><b/>]",
                 "topicb((No connected)):::bugged",
-                f"main_node{shapes[ELEMENT_TYPE.MAIN][0]}main{shapes[ELEMENT_TYPE.MAIN][1]}:::main",
+                f"main_node{shapes[ElementType.MAIN][0]}main{shapes[ElementType.MAIN][1]}:::main",
                 "end",
                 "subgraph connection[<b><b/>]",
-                f"node1{shapes[ELEMENT_TYPE.NODE][0]}node1{shapes[ELEMENT_TYPE.NODE][1]}:::node",
-                f"node2{shapes[ELEMENT_TYPE.NODE][0]}node2{shapes[ELEMENT_TYPE.NODE][1]}:::node",
-                f"node1 {links_str[LINK_TYPE.SERVICE_SERVER]}|to server| service{shapes[ELEMENT_TYPE.SERVICE][0]}Service<br>service/Type{shapes[ELEMENT_TYPE.SERVICE][1]}:::service",
-                f"service {links_str[LINK_TYPE.SERVICE_CLIENT]}|to client| node2",
-                f"node1 {links_str[LINK_TYPE.TOPIC_PUBLISHER]}|publish| topic{shapes[ELEMENT_TYPE.TOPIC][0]}Topic<br>topic/Type{shapes[ELEMENT_TYPE.TOPIC][1]}:::topic",
-                f"topic {links_str[LINK_TYPE.TOPIC_SUBSCRIBER]}|subscribe| node2",
-                f"node1 {links_str[LINK_TYPE.ACTION_SERVER]}|to server| action{shapes[ELEMENT_TYPE.ACTION][0]}/Action<br>action/Type/{shapes[ELEMENT_TYPE.ACTION][1]}:::action",
-                f"action {links_str[LINK_TYPE.ACTION_CLIENT]}|to client| node2",
+                f"node1{shapes[ElementType.NODE][0]}node1{shapes[ElementType.NODE][1]}:::node",
+                f"node2{shapes[ElementType.NODE][0]}node2{shapes[ElementType.NODE][1]}:::node",
+                f"node1 {links_str[LinkType.SERVICE_SERVER]}|to server| service{shapes[ElementType.SERVICE][0]}Service<br>service/Type{shapes[ElementType.SERVICE][1]}:::service",
+                f"service {links_str[LinkType.SERVICE_CLIENT]}|to client| node2",
+                f"node1 {links_str[LinkType.TOPIC_PUBLISHER]}|publish| topic{shapes[ElementType.TOPIC][0]}Topic<br>topic/Type{shapes[ElementType.TOPIC][1]}:::topic",
+                f"topic {links_str[LinkType.TOPIC_SUBSCRIBER]}|subscribe| node2",
+                f"node1 {links_str[LinkType.ACTION_SERVER]}|to server| action{shapes[ElementType.ACTION][0]}/Action<br>action/Type/{shapes[ElementType.ACTION][1]}:::action",
+                f"action {links_str[LinkType.ACTION_CLIENT]}|to client| node2",
                 "end",
                 "end",
             ]
@@ -186,19 +186,19 @@ def main():
 
     # Add keys box links
     if style_config["display_keys"]:
-        last_link = links_ranges[LINK_TYPE.ACTION_CLIENT][1]
-        if LINK_TYPE.TOPIC_PUBLISHER in links_numbers:
-            links_numbers[LINK_TYPE.TOPIC_PUBLISHER].append(last_link + 2)
-        if LINK_TYPE.TOPIC_SUBSCRIBER in links_numbers:
-            links_numbers[LINK_TYPE.TOPIC_SUBSCRIBER].append(last_link + 3)
-        if LINK_TYPE.SERVICE_SERVER in links_numbers:
-            links_numbers[LINK_TYPE.SERVICE_SERVER].append(last_link)
-        if LINK_TYPE.SERVICE_CLIENT in links_numbers:
-            links_numbers[LINK_TYPE.SERVICE_CLIENT].append(last_link + 1)
-        if LINK_TYPE.ACTION_SERVER in links_numbers:
-            links_numbers[LINK_TYPE.ACTION_SERVER].append(last_link + 4)
-        if LINK_TYPE.ACTION_CLIENT in links_numbers:
-            links_numbers[LINK_TYPE.ACTION_CLIENT].append(last_link + 5)
+        last_link = links_ranges[LinkType.ACTION_CLIENT][1]
+        if LinkType.TOPIC_PUBLISHER in links_numbers:
+            links_numbers[LinkType.TOPIC_PUBLISHER].append(last_link + 2)
+        if LinkType.TOPIC_SUBSCRIBER in links_numbers:
+            links_numbers[LinkType.TOPIC_SUBSCRIBER].append(last_link + 3)
+        if LinkType.SERVICE_SERVER in links_numbers:
+            links_numbers[LinkType.SERVICE_SERVER].append(last_link)
+        if LinkType.SERVICE_CLIENT in links_numbers:
+            links_numbers[LinkType.SERVICE_CLIENT].append(last_link + 1)
+        if LinkType.ACTION_SERVER in links_numbers:
+            links_numbers[LinkType.ACTION_SERVER].append(last_link + 4)
+        if LinkType.ACTION_CLIENT in links_numbers:
+            links_numbers[LinkType.ACTION_CLIENT].append(last_link + 5)
 
     links_styles = "\n".join(
         [
@@ -214,11 +214,11 @@ def main():
 
     colors = style_config["colors"]
     mermaid_style = [
-        "classDef node " + colors[ELEMENT_TYPE.NODE],
-        "classDef action " + colors[ELEMENT_TYPE.ACTION],
-        "classDef service " + colors[ELEMENT_TYPE.SERVICE],
-        "classDef topic " + colors[ELEMENT_TYPE.TOPIC],
-        "classDef main " + colors[ELEMENT_TYPE.MAIN],
+        "classDef node " + colors[ElementType.NODE],
+        "classDef action " + colors[ElementType.ACTION],
+        "classDef service " + colors[ElementType.SERVICE],
+        "classDef topic " + colors[ElementType.TOPIC],
+        "classDef main " + colors[ElementType.MAIN],
         "classDef bugged " + style_config["no_conected"],
     ]
 

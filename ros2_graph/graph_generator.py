@@ -19,9 +19,9 @@ from typing import Dict, List, Tuple
 import rclpy
 from rclpy.node import Node
 
-from .rosElement import (
-    ELEMENT_TYPE,
-    LINK_TYPE,
+from .ros_element import (
+    ElementType,
+    LinkType,
     NoNodeElement,
     NodeElement,
     listRosElement2ListStr,
@@ -65,8 +65,8 @@ class GraphGenerator:
             name=data[0],
             namespace=data[1],
             ros_type=data[2],
-            type=ELEMENT_TYPE.ACTION,
-            brackets=self.brackets[ELEMENT_TYPE.ACTION],
+            type=ElementType.ACTION,
+            brackets=self.brackets[ElementType.ACTION],
         )
         return self.newNoNode(new_action, self.actions)
 
@@ -87,8 +87,8 @@ class GraphGenerator:
             name,
             namespace,
             ros_type=ros_type,
-            type=ELEMENT_TYPE.TOPIC,
-            brackets=self.brackets[ELEMENT_TYPE.TOPIC],
+            type=ElementType.TOPIC,
+            brackets=self.brackets[ElementType.TOPIC],
         )
         return self.newNoNode(new_topic, self.topics)
 
@@ -101,8 +101,8 @@ class GraphGenerator:
             name,
             namespace,
             ros_type=ros_type,
-            type=ELEMENT_TYPE.SERVICE,
-            brackets=self.brackets[ELEMENT_TYPE.SERVICE],
+            type=ElementType.SERVICE,
+            brackets=self.brackets[ElementType.SERVICE],
         )
         return self.newNoNode(new_service, self.services)
 
@@ -136,8 +136,8 @@ class GraphGenerator:
         new_node = NodeElement(
             name,
             namespace,
-            type=ELEMENT_TYPE.NODE,
-            brackets=self.brackets[ELEMENT_TYPE.NODE],
+            type=ElementType.NODE,
+            brackets=self.brackets[ElementType.NODE],
         )
         node_hash = hash(new_node)
         if node_hash in self.mainNodes:
@@ -268,13 +268,13 @@ class GraphGenerator:
         self,
         main_node: NodeElement,
         relations: Dict[NoNodeElement, List[NodeElement]],
-        link_type: LINK_TYPE,
+        link_type: LinkType,
     ) -> None:
         """! Add links to the nodes from a relations dictionary
         @param relations, dictonary with the relationships
         @link_type: subscription, publisher, service server ...
         """
-        inv_link_type = LINK_TYPE.inverse_link(link_type)
+        inv_link_type = LinkType.inverse_link(link_type)
         linkStr1 = self.linkStrs[inv_link_type]
         linkStr2 = self.linkStrs[link_type]
         for linkedElement, nodes in relations.items():
@@ -287,8 +287,8 @@ class GraphGenerator:
         newMain = NodeElement(
             name,
             namespace,
-            type=ELEMENT_TYPE.MAIN,
-            brackets=self.brackets[ELEMENT_TYPE.MAIN],
+            type=ElementType.MAIN,
+            brackets=self.brackets[ElementType.MAIN],
         )
         main_hash = hash(newMain)
 
@@ -331,37 +331,37 @@ class GraphGenerator:
         self.createLinks(
             main_node=newMain,
             relations=topics_subscribers,
-            link_type=LINK_TYPE.TOPIC_SUBSCRIBER,
+            link_type=LinkType.TOPIC_SUBSCRIBER,
         )
         self.createLinks(
             main_node=newMain,
             relations=topics_publishers,
-            link_type=LINK_TYPE.TOPIC_PUBLISHER,
+            link_type=LinkType.TOPIC_PUBLISHER,
         )
         self.createLinks(
             main_node=newMain,
             relations=service_clients,
-            link_type=LINK_TYPE.SERVICE_CLIENT,
+            link_type=LinkType.SERVICE_CLIENT,
         )
         self.createLinks(
             main_node=newMain,
             relations=service_servers,
-            link_type=LINK_TYPE.SERVICE_SERVER,
+            link_type=LinkType.SERVICE_SERVER,
         )
         self.createLinks(
             main_node=newMain,
             relations=action_clients,
-            link_type=LINK_TYPE.ACTION_CLIENT,
+            link_type=LinkType.ACTION_CLIENT,
         )
         self.createLinks(
             main_node=newMain,
             relations=action_servers,
-            link_type=LINK_TYPE.ACTION_SERVER,
+            link_type=LinkType.ACTION_SERVER,
         )
 
     def get_nodes_mermaid(
         self, nodes: Dict[int, NodeElement]
-    ) -> Tuple[str, Dict[LINK_TYPE, List[str]]]:
+    ) -> Tuple[str, Dict[LinkType, List[str]]]:
         nodes_list = [str(val) for val in nodes.values()]
         nodes_mermaid = "\n".join(nodes_list)
 
@@ -371,7 +371,7 @@ class GraphGenerator:
                 nodes.values(),
                 list(),
             )
-            for name in LINK_TYPE
+            for name in LinkType
         }
         return nodes_mermaid, links_mermaid
 
@@ -387,38 +387,38 @@ class GraphGenerator:
         actions_style = "\n".join(actions_str)
 
         all_links = {
-            name: str_main_links[name] + str_nodes_links[name] for name in LINK_TYPE
+            name: str_main_links[name] + str_nodes_links[name] for name in LinkType
         }
 
-        num_topic_publisher_links = [0, len(all_links[LINK_TYPE.TOPIC_PUBLISHER])]
+        num_topic_publisher_links = [0, len(all_links[LinkType.TOPIC_PUBLISHER])]
         num_topic_subscriber_links = [
             num_topic_publisher_links[1],
-            len(all_links[LINK_TYPE.TOPIC_SUBSCRIBER]) + num_topic_publisher_links[1],
+            len(all_links[LinkType.TOPIC_SUBSCRIBER]) + num_topic_publisher_links[1],
         ]
         num_service_server_links = [
             num_topic_subscriber_links[1],
-            len(all_links[LINK_TYPE.SERVICE_SERVER]) + num_topic_subscriber_links[1],
+            len(all_links[LinkType.SERVICE_SERVER]) + num_topic_subscriber_links[1],
         ]
         num_service_client_links = [
             num_service_server_links[1],
-            len(all_links[LINK_TYPE.SERVICE_CLIENT]) + num_service_server_links[1],
+            len(all_links[LinkType.SERVICE_CLIENT]) + num_service_server_links[1],
         ]
         num_action_server_links = [
             num_service_client_links[1],
-            len(all_links[LINK_TYPE.ACTION_SERVER]) + num_service_client_links[1],
+            len(all_links[LinkType.ACTION_SERVER]) + num_service_client_links[1],
         ]
         num_action_client_links = [
             num_action_server_links[1],
-            len(all_links[LINK_TYPE.ACTION_CLIENT]) + num_action_server_links[1],
+            len(all_links[LinkType.ACTION_CLIENT]) + num_action_server_links[1],
         ]
 
         links_ranges = {
-            LINK_TYPE.TOPIC_PUBLISHER: num_topic_publisher_links,
-            LINK_TYPE.TOPIC_SUBSCRIBER: num_topic_subscriber_links,
-            LINK_TYPE.SERVICE_SERVER: num_service_server_links,
-            LINK_TYPE.SERVICE_CLIENT: num_service_client_links,
-            LINK_TYPE.ACTION_SERVER: num_action_server_links,
-            LINK_TYPE.ACTION_CLIENT: num_action_client_links,
+            LinkType.TOPIC_PUBLISHER: num_topic_publisher_links,
+            LinkType.TOPIC_SUBSCRIBER: num_topic_subscriber_links,
+            LinkType.SERVICE_SERVER: num_service_server_links,
+            LinkType.SERVICE_CLIENT: num_service_client_links,
+            LinkType.ACTION_SERVER: num_action_server_links,
+            LinkType.ACTION_CLIENT: num_action_client_links,
         }
         print(main_style)
         print(nodes_style)
@@ -428,12 +428,12 @@ class GraphGenerator:
             topics_style,
             services_style,
             actions_style,
-            "\n".join(all_links[LINK_TYPE.TOPIC_PUBLISHER]),
-            "\n".join(all_links[LINK_TYPE.TOPIC_SUBSCRIBER]),
-            "\n".join(all_links[LINK_TYPE.SERVICE_SERVER]),
-            "\n".join(all_links[LINK_TYPE.SERVICE_CLIENT]),
-            "\n".join(all_links[LINK_TYPE.ACTION_SERVER]),
-            "\n".join(all_links[LINK_TYPE.ACTION_CLIENT]),
+            "\n".join(all_links[LinkType.TOPIC_PUBLISHER]),
+            "\n".join(all_links[LinkType.TOPIC_SUBSCRIBER]),
+            "\n".join(all_links[LinkType.SERVICE_SERVER]),
+            "\n".join(all_links[LinkType.SERVICE_CLIENT]),
+            "\n".join(all_links[LinkType.ACTION_SERVER]),
+            "\n".join(all_links[LinkType.ACTION_CLIENT]),
         ]
         mermaid_str = "\n".join(mermaid_graph)
         return mermaid_str, links_ranges

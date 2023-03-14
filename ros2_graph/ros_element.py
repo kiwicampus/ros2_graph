@@ -18,7 +18,7 @@ from enum import Enum
 from typing import List, Dict
 
 
-class ELEMENT_TYPE(Enum):
+class ElementType(Enum):
     MAIN = 0
     NODE = 1
     TOPIC = 2
@@ -27,20 +27,20 @@ class ELEMENT_TYPE(Enum):
 
 
 def element_style(element_type: int) -> str:
-    if element_type == ELEMENT_TYPE.MAIN:
+    if element_type == ElementType.MAIN:
         return "main"
-    if element_type == ELEMENT_TYPE.NODE:
+    if element_type == ElementType.NODE:
         return "node"
-    if element_type == ELEMENT_TYPE.TOPIC:
+    if element_type == ElementType.TOPIC:
         return "topic"
-    if element_type == ELEMENT_TYPE.SERVICE:
+    if element_type == ElementType.SERVICE:
         return "service"
-    if element_type == ELEMENT_TYPE.ACTION:
+    if element_type == ElementType.ACTION:
         return "action"
     return "default"
 
 
-class LINK_TYPE(Enum):
+class LinkType(Enum):
     TOPIC_PUBLISHER = 0
     TOPIC_SUBSCRIBER = 1
     SERVICE_SERVER = 2
@@ -49,18 +49,18 @@ class LINK_TYPE(Enum):
     ACTION_CLIENT = 5
 
     def inverse_link(link_type: int) -> int:
-        if link_type == LINK_TYPE.TOPIC_SUBSCRIBER:
-            return LINK_TYPE.TOPIC_PUBLISHER
-        if link_type == LINK_TYPE.TOPIC_PUBLISHER:
-            return LINK_TYPE.TOPIC_SUBSCRIBER
-        if link_type == LINK_TYPE.SERVICE_SERVER:
-            return LINK_TYPE.SERVICE_CLIENT
-        if link_type == LINK_TYPE.SERVICE_CLIENT:
-            return LINK_TYPE.SERVICE_SERVER
-        if link_type == LINK_TYPE.ACTION_SERVER:
-            return LINK_TYPE.ACTION_CLIENT
-        if link_type == LINK_TYPE.ACTION_CLIENT:
-            return LINK_TYPE.ACTION_SERVER
+        if link_type == LinkType.TOPIC_SUBSCRIBER:
+            return LinkType.TOPIC_PUBLISHER
+        if link_type == LinkType.TOPIC_PUBLISHER:
+            return LinkType.TOPIC_SUBSCRIBER
+        if link_type == LinkType.SERVICE_SERVER:
+            return LinkType.SERVICE_CLIENT
+        if link_type == LinkType.SERVICE_CLIENT:
+            return LinkType.SERVICE_SERVER
+        if link_type == LinkType.ACTION_SERVER:
+            return LinkType.ACTION_CLIENT
+        if link_type == LinkType.ACTION_CLIENT:
+            return LinkType.ACTION_SERVER
         raise ValueError("Non valid link type code")
 
 
@@ -69,7 +69,7 @@ class RosElement:
     # RosElement Class store basic information of ROS elements: Nodes, topics, services and actions
     name: str
     namespace: str
-    type: ELEMENT_TYPE
+    type: ElementType
 
     def full_name(self) -> str:
         """!  Put togheter name and name space on a sigle string
@@ -136,7 +136,7 @@ class NodeElement(RosElement):
     def __post_init__(self):
         self.links: List[Dict[int, Link]] = [dict() for i in range(6)]
 
-    def addLink(self, linkedElement: NoNodeElement, linkStr: str, link_type: LINK_TYPE):
+    def addLink(self, linkedElement: NoNodeElement, linkStr: str, link_type: LinkType):
         link = Link(linkedElement=linkedElement, linkStr=linkStr)
         link_hash = hash(link)
         index = link_type.value
@@ -147,7 +147,7 @@ class NodeElement(RosElement):
             else:
                 linkedElement.to_connected = True
 
-    def getLinksStr(self, which: LINK_TYPE) -> List[str]:
+    def getLinksStr(self, which: LinkType) -> List[str]:
         name = self.full_name()
         index = which.value
         linksStr = [
