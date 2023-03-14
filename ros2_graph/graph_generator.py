@@ -24,7 +24,7 @@ from .ros_element import (
     LinkType,
     NoNodeElement,
     NodeElement,
-    listRosElement2ListStr,
+    list_ros_element_2_list_str,
 )
 from . import ros_cli_utils as rcu
 from functools import reduce
@@ -45,7 +45,7 @@ class GraphGenerator:
         self.services: Dict[int, NoNodeElement] = dict()
         self.actions: Dict[int, NoNodeElement] = dict()
 
-        self.linkStrs = style_config["links_str"]
+        self.link_strs = style_config["links_str"]
         self.brackets = style_config["shapes"]
 
     def newNoNode(
@@ -275,12 +275,12 @@ class GraphGenerator:
         @link_type: subscription, publisher, service server ...
         """
         inv_link_type = LinkType.inverse_link(link_type)
-        linkStr1 = self.linkStrs[inv_link_type]
-        linkStr2 = self.linkStrs[link_type]
-        for linkedElement, nodes in relations.items():
-            main_node.addLink(linkedElement, linkStr1, inv_link_type)
+        link_str1 = self.link_strs[inv_link_type]
+        link_str2 = self.link_strs[link_type]
+        for linked_element, nodes in relations.items():
+            main_node.add_link(linked_element, link_str1, inv_link_type)
             for node in nodes:
-                node.addLink(linkedElement, linkStr2, link_type)
+                node.add_link(linked_element, link_str2, link_type)
 
     def get_node_graph(self, node):
         name, namespace = rcu.split_full_name(node)
@@ -367,7 +367,7 @@ class GraphGenerator:
 
         links_mermaid = {
             name: reduce(
-                lambda mermaid_lines, node: mermaid_lines + node.getLinksStr(name),
+                lambda mermaid_lines, node: mermaid_lines + node.get_links_str(name),
                 nodes.values(),
                 list(),
             )
@@ -379,9 +379,9 @@ class GraphGenerator:
         main_style, str_main_links = self.get_nodes_mermaid(self.mainNodes)
         nodes_style, str_nodes_links = self.get_nodes_mermaid(self.nodes)
 
-        topics_str = listRosElement2ListStr(self.topics.values())
-        services_str = listRosElement2ListStr(self.services.values())
-        actions_str = listRosElement2ListStr(self.actions.values())
+        topics_str = list_ros_element_2_list_str(self.topics.values())
+        services_str = list_ros_element_2_list_str(self.services.values())
+        actions_str = list_ros_element_2_list_str(self.actions.values())
         topics_style = "\n".join(topics_str)
         services_style = "\n".join(services_str)
         actions_style = "\n".join(actions_str)

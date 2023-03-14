@@ -4,11 +4,17 @@ import os
 
 
 def remove_file(file: str) -> None:
+    """!
+    Just remove a file if ist exist
+    """
     if os.path.exists(file):
         os.remove(file)
 
 
 def save_ros_node_info(node_name: str, file: str) -> None:
+    """!
+    Save ros node informatin in a text file
+    """
     remove_file(file)
     subprocess.check_output(f"ros2 node info {node_name} >> {file}", shell=True)
 
@@ -59,7 +65,10 @@ def get_clean_lines(query_instruction: str) -> List[str]:
     return list(filter(lambda x: x != "", line_list))
 
 
-def split_full_name(full_name: str):
+def split_full_name(full_name: str) -> Tuple(str, str):
+    """!
+    split a ros name into name and namespace
+    """
     namespace, name = full_name.rsplit("/", 1)
     if len(namespace) < 1:
         namespace = "/"

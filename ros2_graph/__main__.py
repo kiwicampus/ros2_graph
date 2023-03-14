@@ -25,9 +25,14 @@ from .ros_element import ElementType, LinkType
 
 
 def get_style(style_file: str):
-    with open(style_file) as f:
+    """!
+    Load custom style configs, or use the default
+    @param style_file: style .yaml file
+    """
+    style_dict = {}
+    with open(style_file, encoding="UTF-8") as f:
         yaml_data = f.read()
-    style_dict = yaml.load(yaml_data)
+        style_dict = yaml.load(yaml_data)
 
     shapes = style_dict.get("shapes", {})
     colors = style_dict.get("colors", {})
@@ -35,14 +40,14 @@ def get_style(style_file: str):
     links_style = style_dict.get("links_style", {})
     display_keys = style_dict.get("display_keys", True)
 
-    shapesDict = {
+    shapes_dict = {
         ElementType.MAIN: shapes.get("main", ["[", "]"]),
         ElementType.NODE: shapes.get("node", ["[", "]"]),
         ElementType.TOPIC: shapes.get("topic", ["([", "])"]),
         ElementType.SERVICE: shapes.get("service", ["[/", "\\]"]),
         ElementType.ACTION: shapes.get("action", ["{{", "}}"]),
     }
-    colorsDict = {
+    colors_dict = {
         ElementType.MAIN: colors.get(
             "main", "opacity:0.9,fill:#059,stroke:#09F,stroke-width:4px,color:#fff"
         ),
@@ -64,7 +69,7 @@ def get_style(style_file: str):
         "no_conected", "opacity:0.9,fill:#933,stroke:#800,stroke-width:2px,color:#fff"
     )
 
-    linkStrs = {
+    link_strs = {
         LinkType.TOPIC_PUBLISHER: links_display.get("topics_publisher", "-->"),
         LinkType.TOPIC_SUBSCRIBER: links_display.get("topics_subscriber", "-->"),
         LinkType.SERVICE_SERVER: links_display.get("services_server", "o-.-o"),
@@ -72,7 +77,7 @@ def get_style(style_file: str):
         LinkType.ACTION_SERVER: links_display.get("action_server", "o==o"),
         LinkType.ACTION_CLIENT: links_display.get("action_client", "<==>"),
     }
-    linkStyle = {
+    link_style = {
         LinkType.TOPIC_PUBLISHER: links_style.get("topics_publisher", None),
         LinkType.TOPIC_SUBSCRIBER: links_style.get("topics_subscriber", None),
         LinkType.SERVICE_SERVER: links_style.get("services_server", None),
@@ -82,11 +87,11 @@ def get_style(style_file: str):
     }
 
     style_settings = {
-        "shapes": shapesDict,
-        "colors": colorsDict,
+        "shapes": shapes_dict,
+        "colors": colors_dict,
         "no_conected": no_conected,
-        "links_str": linkStrs,
-        "links_style": linkStyle,
+        "links_str": link_strs,
+        "links_style": link_style,
         "display_keys": display_keys,
     }
 
@@ -249,7 +254,7 @@ def main():
         print(mermaid_graph)
         return
 
-    with open(out_file + ".md", "a") as file:
+    with open(out_file + ".md", "a", encoding="UTF-8") as file:
         file.write(mermaid_graph)
 
     # Save .md file

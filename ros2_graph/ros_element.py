@@ -19,6 +19,10 @@ from typing import List, Dict
 
 
 class ElementType(Enum):
+    """!
+    Enumeration class for ROS element types
+    """
+
     MAIN = 0
     NODE = 1
     TOPIC = 2
@@ -26,7 +30,10 @@ class ElementType(Enum):
     ACTION = 4
 
 
-def element_style(element_type: int) -> str:
+def element_style(element_type: ElementType) -> str:
+    """!
+    Just map element types and and it's string
+    """
     if element_type == ElementType.MAIN:
         return "main"
     if element_type == ElementType.NODE:
@@ -41,6 +48,10 @@ def element_style(element_type: int) -> str:
 
 
 class LinkType(Enum):
+    """!
+    Enumeration class for ROS relationships types
+    """
+
     TOPIC_PUBLISHER = 0
     TOPIC_SUBSCRIBER = 1
     SERVICE_SERVER = 2
@@ -48,7 +59,11 @@ class LinkType(Enum):
     ACTION_SERVER = 4
     ACTION_CLIENT = 5
 
-    def inverse_link(link_type: int) -> int:
+    @classmethod
+    def inverse_link(cls, link_type: int) -> int:
+        """!
+        Map "from" links to "to" links and vice versa
+        """
         if link_type == LinkType.TOPIC_SUBSCRIBER:
             return LinkType.TOPIC_PUBLISHER
         if link_type == LinkType.TOPIC_PUBLISHER:
@@ -66,7 +81,11 @@ class LinkType(Enum):
 
 @dataclass
 class RosElement:
-    # RosElement Class store basic information of ROS elements: Nodes, topics, services and actions
+    """! 
+        RosElement Class store basic information of ROS elements: 
+        Nodes, topics, services and actions
+    """
+
     name: str
     namespace: str
     type: ElementType
@@ -79,16 +98,26 @@ class RosElement:
             return self.name
         return self.namespace + self.name
 
-    def addTypes(self, types) -> None:
-        self.types = types
 
-
-def listRosElement2ListStr(elements: List[RosElement]) -> List[str]:
-    return [str(element) for element in elements]
+def list_ros_element_2_list_str(elements: List[RosElement]) -> List[str]:
+    """!
+    convert a RosElement list to its string list representation
+    """
+    return list(map(str, elements))
 
 
 @dataclass
 class NoNodeElement(RosElement):
+    """!
+        NoNodeElement Class store aditional information of ROS elements 
+        that are not nodes.
+        Atributes:
+            ros_type: ros topic, service or action type
+            from_connected: bool, has at least one publisher or server
+            to_connected: bool, has at least one subscriber or client
+            brackets: for mermaid diplay, default ("([", "])")
+    """
+
     ros_type: str
     from_connected: bool = False
     to_connected: bool = False
@@ -113,47 +142,74 @@ class NoNodeElement(RosElement):
 
 @dataclass
 class Link:
-    linkedElement: NoNodeElement
-    linkStr: str
+    """!
+        contains the relashionship information from a ROS node
+        to some other ROS element
+        Atributes:
+            linked_element: NoNodeElement object
+            link_str: for mermaid display
+    """
+
+    linked_element: NoNodeElement
+    link_str: str
 
     def __str__(self) -> str:
-        return self.linkedElement.full_name()
+        return self.linked_element.full_name()
 
     def __eq__(self, another) -> bool:
         return (
-            self.linkedElement == another.linkedElement
-            and self.linkStr == another.linkStr
+            self.linked_element == another.linked_element
+            and self.link_str == another.link_str
         )
 
     def __hash__(self) -> int:
-        return hash(self.linkedElement) ^ hash(self.linkStr)
+        return hash(self.linked_element) ^ hash(self.link_str)
 
 
 @dataclass
 class NodeElement(RosElement):
+    """!
+        NoNodeElement Class store aditional information of ROS nodes.
+        Atributes:
+            brackets: for mermaid diplay
+    """
+
     brackets: List[str]
 
     def __post_init__(self):
         self.links: List[Dict[int, Link]] = [dict() for i in range(6)]
 
-    def addLink(self, linkedElement: NoNodeElement, linkStr: str, link_type: LinkType):
-        link = Link(linkedElement=linkedElement, linkStr=linkStr)
+    def add_link(
+        self, linked_element: NoNodeElement, link_str: str, link_type: LinkType
+    ):
+        """!
+         Add a relashion ship  with a no node element,
+         but only if it doesn't already exist
+         @param linked_element: a topic, sevice or action
+         @param link_str: for mermaid display
+         @param link_type: which kind of relashionship is
+        """
+        link = Link(linked_element=linked_element, link_str=link_str)
         link_hash = hash(link)
         index = link_type.value
         if link_hash not in self.links[index]:
             self.links[index][link_hash] = link
             if index % 2:
-                linkedElement.from_connected = True
+                linked_element.from_connected = True
             else:
-                linkedElement.to_connected = True
+                linked_element.to_connected = True
 
-    def getLinksStr(self, which: LinkType) -> List[str]:
+    def get_links_str(self, which: LinkType) -> List[str]:
+        """!
+        Get al links string representation from a desired type
+        @param which: specify the link type
+        """
         name = self.full_name()
         index = which.value
         linksStr = [
-            name + " " + link.linkStr + " " + str(link)
+            name + " " + link.link_str + " " + str(link)
             if index % 2
-            else str(link) + " " + link.linkStr + " " + name
+            else str(link) + " " + link.link_str + " " + name
             for link in self.links[index].values()
         ]
         return linksStr
