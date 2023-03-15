@@ -208,4 +208,20 @@ links_style:
   action_server: fill:none,stroke:green;
   action_client: fill:none,stroke:green;
 display_keys: True
+ignore:
+  nodes:
+  - ""
+  topics:
+    - "/parameter_events",
+    - "/rosout"
+    - "/tf"
+    - "/cascade_lifecycle_activations"
+    - "/cascade_lifecycle_states"
+    - ""
+  services:
+    - ""
+  actions:
+    - ""
 ```
+
+Use the `ignore` field to don not include some node, topic, service or action in your graph.
