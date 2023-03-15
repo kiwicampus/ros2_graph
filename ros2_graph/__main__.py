@@ -218,7 +218,7 @@ def main():
             + " "
             + style_config["links_style"][link_type]
             for link_type, numbers in links_numbers.items()
-            if style_config["links_style"][link_type] != None
+            if style_config["links_style"][link_type] is not None
             and style_config["links_style"][link_type] != "None"
         ]
     )

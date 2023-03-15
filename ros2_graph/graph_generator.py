@@ -62,15 +62,15 @@ class GraphGenerator:
             elemt_dict[new_hash] = new_element
         return elemt_dict[new_hash]
 
-    def new_action(self, data: Tuple[str]) -> NoNodeElement:
+    def new_action(self, name: str, namespace: str, ros_type: str) -> NoNodeElement:
         """! Initialize a NoNodeElement action object form a string tuple (name, namespace, ros_type) or return the already existing action
         @param action data tuples (name, namespace, ros_type)
         @return NoNodeElement action object
         """
         new_action = NoNodeElement(
-            name=data[0],
-            namespace=data[1],
-            ros_type=data[2],
+            name=name,
+            namespace=namespace,
+            ros_type=ros_type,
             type=ElementType.ACTION,
             brackets=self.brackets[ElementType.ACTION],
         )
@@ -82,7 +82,7 @@ class GraphGenerator:
         @param actions_data actions info in (name, namespace, ros_type) format
         @return a tuple of NoNodeElement action objects
         """
-        return tuple(self.new_action(data) for data in actions_data)
+        return tuple(self.new_action(*data) for data in actions_data)
 
     def new_topic(self, name: str, namespace: str, ros_type: str) -> NoNodeElement:
         """! Initialize a NoNodeElement topic object form a string tuple (name, namespace, ros_type) or return the already existing action
