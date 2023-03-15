@@ -22,16 +22,19 @@ class ElementType(Enum):
     """!
     Enumeration class for ROS element types
     """
+
     MAIN = 0
     NODE = 1
     TOPIC = 2
     SERVICE = 3
     ACTION = 4
+
     def __str__(self):
         """!
         Just map element types and and it's string
         """
         return self.name.lower()
+
 
 class LinkType(Enum):
     """!
@@ -112,9 +115,7 @@ class NoNodeElement(RosElement):
     def __str__(self) -> str:
         name = self.full_name()
         style = (
-            str(self.type)
-            if self.from_connected and self.to_connected
-            else "bugged"
+            str(self.type) if self.from_connected and self.to_connected else "bugged"
         )
 
         return f"{name}{self.brackets[0]} {name}<br>{self.ros_type} {self.brackets[1]}:::{style}"

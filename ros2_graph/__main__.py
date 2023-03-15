@@ -24,15 +24,16 @@ from .graph_generator import GraphGenerator
 from .ros_element import ElementType, LinkType
 
 
-def get_style(style_file: str):
+def get_style(style_file: str = None):
     """!
     Load custom style configs, or use the default
     @param style_file: style .yaml file
     """
     style_dict = {}
-    with open(style_file, encoding="UTF-8") as f:
-        yaml_data = f.read()
-        style_dict = yaml.load(yaml_data)
+    if style_file:
+        with open(style_file, encoding="UTF-8") as f:
+            yaml_data = f.read()
+            style_dict = yaml.load(yaml_data)
 
     shapes = style_dict.get("shapes", {})
     colors = style_dict.get("colors", {})
@@ -82,8 +83,8 @@ def get_style(style_file: str):
         LinkType.TOPIC_SUBSCRIBER: links_style.get("topics_subscriber", None),
         LinkType.SERVICE_SERVER: links_style.get("services_server", None),
         LinkType.SERVICE_CLIENT: links_style.get("services_client", None),
-        LinkType.ACTION_SERVER: links_style.get("action_server", "color:green;"),
-        LinkType.ACTION_CLIENT: links_style.get("action_client", "color:green;"),
+        LinkType.ACTION_SERVER: links_style.get("action_server", "fill:none,stroke:green;"),
+        LinkType.ACTION_CLIENT: links_style.get("action_client", "fill:none,stroke:green;"),
     }
 
     style_settings = {

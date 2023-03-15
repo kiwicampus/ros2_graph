@@ -65,7 +65,7 @@ def get_clean_lines(query_instruction: str) -> List[str]:
     return list(filter(lambda x: x != "", line_list))
 
 
-def split_full_name(full_name: str) -> Tuple(str, str):
+def split_full_name(full_name: str) -> Tuple[str, str]:
     """!
     split a ros name into name and namespace
     """

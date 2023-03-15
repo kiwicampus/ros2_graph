@@ -261,14 +261,14 @@ class GraphGenerator:
             for service in filtered_services:
                 services_and_nodes[service]["nodes"].append(self.new_node(*node))
 
-        services_and_nodesObj = {}
+        services_and_nodes_obj = {}
         for service, sub_dict in services_and_nodes.items():
             name, namespace = rcu.split_full_name(service)
             ros_type = sub_dict["type"]
-            serviceObj = self.new_service(name, namespace, ros_type)
-            services_and_nodesObj[serviceObj] = sub_dict["nodes"]
+            service_obj = self.new_service(name, namespace, ros_type)
+            services_and_nodes_obj[service_obj] = sub_dict["nodes"]
 
-        return services_and_nodesObj
+        return services_and_nodes_obj
 
     def create_links(
         self,
@@ -437,8 +437,7 @@ class GraphGenerator:
             LinkType.ACTION_SERVER: num_action_server_links,
             LinkType.ACTION_CLIENT: num_action_client_links,
         }
-        print(main_style)
-        print(nodes_style)
+
         mermaid_graph = [
             main_style,
             nodes_style,
