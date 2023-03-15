@@ -13,93 +13,446 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import subprocess
 from functools import partial
 from typing import Dict, List, Tuple
 
 import rclpy
 from rclpy.node import Node
 
+from .ros_element import (
+    ElementType,
+    LinkType,
+    NoNodeElement,
+    NodeElement,
+    list_ros_element_2_list_str,
+)
+from . import ros_cli_utils as rcu
+from functools import reduce
+
 ElementNameTypes = Tuple[str, List[str]]
 RelatedNodes = Dict[str, List[str]]
 ElementRelatedNodes = Dict[str, RelatedNodes]
 
-rclpy.init()
-dummy = Node("Graph_generator")
 
+class GraphGenerator:
+    def __init__(self, style_config: Dict[str, any]):
+        """!
+            style_config: style .yaml values as dictionary
+        """
+        rclpy.init()
+        self.dummy = Node("Graph_generator")
+        self.ros_node_info_file = "node_info.txt"
+        self.mainNodes: Dict[int, NodeElement] = dict()
+        self.nodes: Dict[int, NodeElement] = dict()
+        self.topics: Dict[int, NoNodeElement] = dict()
+        self.services: Dict[int, NoNodeElement] = dict()
+        self.actions: Dict[int, NoNodeElement] = dict()
 
-def between_patterns(pattern: Tuple[str], file: str) -> str:
-    """!
-    Return sed instruction to get text between two patters
-    @param pattern (tuple) size two tuple with both patterns
-    @param file (str) File to filter
+        self.link_strs = style_config["links_str"]
+        self.brackets = style_config["shapes"]
 
-    @return str bash instruction to filter a text file
-    """
-    instruction = ("sed -n '/%s/, /%s/{ /%s/! { /%s/! p } }' %s") % (
-        pattern[0],
-        pattern[1],
-        pattern[0],
-        pattern[1],
-        file,
-    )
-    return instruction
+    def new_no_node(
+        self, new_element: NoNodeElement, elemt_dict: Dict[int, NoNodeElement]
+    ) -> NoNodeElement:
+        """!
+        Add new_element to the elemt_dict if it not already exist
+        """
+        new_hash = hash(new_element)
+        if new_hash not in elemt_dict:
+            elemt_dict[new_hash] = new_element
+        return elemt_dict[new_hash]
 
+    def new_action(self, name: str, namespace: str, ros_type: str) -> NoNodeElement:
+        """! Initialize a NoNodeElement action object form a string tuple (name, namespace, ros_type) or return the already existing action
+        @param action data tuples (name, namespace, ros_type)
+        @return NoNodeElement action object
+        """
+        new_action = NoNodeElement(
+            name=name,
+            namespace=namespace,
+            ros_type=ros_type,
+            type=ElementType.ACTION,
+            brackets=self.brackets[ElementType.ACTION],
+        )
+        return self.new_no_node(new_action, self.actions)
 
-def after_pattern(pattern: str, file: str) -> str:
-    """!
-    Return sed instruction to get text after a pattern
-    @param pattern (str) pattern to filter
-    @param file (str) File to filter
+    def actions_tuple(self, actions_data: Tuple[Tuple[str]]) -> Tuple[NoNodeElement]:
+        """!
+        create a group of actions objects from a tuple of data
+        @param actions_data actions info in (name, namespace, ros_type) format
+        @return a tuple of NoNodeElement action objects
+        """
+        return tuple(self.new_action(*data) for data in actions_data)
 
-    @return str bash instruction to filter a text file
-    """
-    instruction = f"sed -n '/{pattern}/,$p' {file} | sed '1d'"
-    return instruction
+    def new_topic(self, name: str, namespace: str, ros_type: str) -> NoNodeElement:
+        """! Initialize a NoNodeElement topic object form a string tuple (name, namespace, ros_type) or return the already existing action
+        @param topic data tuples (name, namespace, ros_type)
+        @return NoNodeElement topic object
+        """
+        new_topic = NoNodeElement(
+            name,
+            namespace,
+            ros_type=ros_type,
+            type=ElementType.TOPIC,
+            brackets=self.brackets[ElementType.TOPIC],
+        )
+        return self.new_no_node(new_topic, self.topics)
 
+    def new_service(self, name: str, namespace: str, ros_type: str) -> NoNodeElement:
+        """! Initialize a NoNodeElement service object form a string tuple (name, namespace, ros_type) or return the already existing action
+        @param service data tuples (name, namespace, ros_type)
+        @return NoNodeElement service object
+        """
+        new_service = NoNodeElement(
+            name,
+            namespace,
+            ros_type=ros_type,
+            type=ElementType.SERVICE,
+            brackets=self.brackets[ElementType.SERVICE],
+        )
+        return self.new_no_node(new_service, self.services)
 
-def get_clean_lines(query_instruction: str) -> List[str]:
-    """! Perform a shell instruction and return the answer as a list of string
+    def get_actions(self, node: str) -> Dict[str, Tuple[NoNodeElement]]:
+        """! Get Action related to some node
+        @param node, the node to inspect its actions
+        """
+        patterns = {
+            "action_servers": ("Action Servers:", "Action Clients:"),
+            "action_client": ("Action Clients:",),
+        }
 
-    @param query_instruction (str) ros2 cli query plus sed or grep filter instruction
+        rcu.save_ros_node_info(node_name=node, file=self.ros_node_info_file)
+        elements = {
+            k: self.actions_tuple(
+                rcu.get_node_info_block(pattern, file=self.ros_node_info_file)
+            )
+            for k, pattern in patterns.items()
+        }
 
-    @return list lines
-    """
-    line_list = (
-        subprocess.check_output(query_instruction, shell=True)
-        .decode("utf-8")
-        .splitlines()
-    )
+        rcu.remove_file(self.ros_node_info_file)
 
-    return list(filter(lambda x: x != "", line_list))
+        return elements
 
+    def new_node(self, name: str, namespace: str) -> NodeElement:
+        """! Create a new node if is not already created given its data
+        and return it
+        @param data a tuple (name, namespace)
+        @return the NodeElement object
+        """
+        new_node = NodeElement(
+            name,
+            namespace,
+            type=ElementType.NODE,
+            brackets=self.brackets[ElementType.NODE],
+        )
+        node_hash = hash(new_node)
+        if node_hash in self.mainNodes:
+            return self.mainNodes[node_hash]
+        if node_hash not in self.nodes:
+            self.nodes[node_hash] = new_node
+        return self.nodes[node_hash]
 
-def get_node_info_block(pattern: tuple, file_name: str) -> Tuple[Tuple[str, str]]:
-    """! Get the name and the type of the ros elements in an ros2 node info block
-    @param pattern: tuple of strings, marks that indicate the start and the end of that block
-    @param file_name: File where is stored the ros node info response
-    @return tuples (element, type)
-    """
-    filter_rule = (
-        between_patterns(pattern, file_name)
-        if len(pattern) > 1
-        else after_pattern(pattern[0], file_name)
-    )
-    filter_rule += " | tr -d '[:blank:]'"
-    return tuple(x.split(":") for x in get_clean_lines(filter_rule))
+    def nodes_from_data(self, nodes_data: Tuple[Tuple[str]]) -> Tuple[NodeElement]:
+        """!
+        create a group of nodes objects from a tuple of data
+        @param nodes_data: nodes info in (name, namespace) format
+        @return a tuple of NodeElement objects
+        """
+        return tuple((self.new_node(*node) for node in nodes_data))
 
+    def filter_topics(self, topic: Tuple[str, str]) -> bool:
+        """! To filter undesired topics
+        @param topic tuple(name, type)
+        @return False if the topic is not desired
+        """
+        exclude = [
+            "/parameter_events",
+            "/rosout",
+            "/tf",
+            "/cascade_lifecycle_activations",
+            "/cascade_lifecycle_states",
+            "",
+        ]
 
-def join_name_and_namespace(name: str, namespace: str = None) -> str:
-    """!  Put togheter name and name space on a sigle string
-    @param name
-    @param namespace: ignored for default namespace '/'
-    @return str namespace/name
-    """
-    if namespace is None:
-        return name
-    if len(namespace) > 1:
-        namespace += "/"
-    return namespace + name
+        blacklist = ("/transition_event", "/_action")
+
+        if topic[0] in exclude:
+            return False
+
+        return is_not_in_blacklist(topic, blacklist)
+
+    def get_topics_related_nodes(
+        self, topics: List[ElementNameTypes], subscribers: bool
+    ) -> Dict[NoNodeElement, List[NodeElement]]:
+        """!
+        Get publishers or subcribers nodes for the specified topics
+
+        @param topics (list[tuple(name, types list)]) List of topics with names and type
+        @param publishers (bool) get publishers or subscribers nodes
+
+        @return dict {topic_name: {type: str, nodes: [nodes_names]}}
+        """
+
+        get_endpoints_function = (
+            self.dummy.get_publishers_info_by_topic
+            if subscribers
+            else self.dummy.get_subscriptions_info_by_topic
+        )
+
+        topics_and_nodes = {}
+        for topic in filter(self.filter_topics, topics):
+            name, namespace = rcu.split_full_name(topic[0])
+            ros_type = "<br>".join(topic[1])
+            topicObj = self.new_topic(name, namespace, ros_type)
+            endpoints = get_endpoints_function(topic[0])
+
+            nodes = [
+                self.new_node(endpoint.node_name, endpoint.node_namespace)
+                for endpoint in endpoints
+            ]
+            topics_and_nodes[topicObj] = nodes
+
+        return topics_and_nodes
+
+    def get_services_related_nodes(
+        self, services: List[ElementNameTypes], clients: bool
+    ) -> Dict[NoNodeElement, List[NodeElement]]:
+        """! Get servers or clients nodes for the specified services
+        @param services list of tuple(name: str, types: list)
+        @param clients, True for get clients names, false for server names
+        @return dictonary with services and related nodes
+        """
+
+        blacklist = [
+            "/change_state",
+            "/describe_parameters",
+            "/get_available_states",
+            "/get_available_transitions",
+            "/get_parameter_types",
+            "/get_parameters",
+            "/get_state",
+            "/get_transition_graph",
+            "/list_parameters",
+            "/set_parameters",
+            "/set_parameters_atomically",
+            "/_action",
+        ]
+
+        get_services_function = (
+            self.dummy.get_client_names_and_types_by_node
+            if clients
+            else self.dummy.get_service_names_and_types_by_node
+        )
+
+        filter_services = partial(is_not_in_blacklist, blacklist=blacklist)
+        services_and_nodes = {
+            service[0]: {"type": "<br>".join(service[1]), "nodes": []}
+            for service in filter(filter_services, services)
+        }
+
+        services_names = services_and_nodes.keys()
+        nodes_list = self.dummy.get_node_names_and_namespaces()
+
+        for node in nodes_list:
+            services = tuple(map(lambda x: x[0], get_services_function(*node)))
+            filtered_services = tuple(
+                filter((lambda service: service in services_names), services)
+            )
+            for service in filtered_services:
+                services_and_nodes[service]["nodes"].append(self.new_node(*node))
+
+        services_and_nodes_obj = {}
+        for service, sub_dict in services_and_nodes.items():
+            name, namespace = rcu.split_full_name(service)
+            ros_type = sub_dict["type"]
+            service_obj = self.new_service(name, namespace, ros_type)
+            services_and_nodes_obj[service_obj] = sub_dict["nodes"]
+
+        return services_and_nodes_obj
+
+    def create_links(
+        self,
+        main_node: NodeElement,
+        relations: Dict[NoNodeElement, List[NodeElement]],
+        link_type: LinkType,
+    ) -> None:
+        """! Add links to the nodes from a relations dictionary
+        @param relations, dictonary with the relationships
+        @link_type: subscription, publisher, service server ...
+        """
+        inv_link_type = LinkType.inverse_link(link_type)
+        link_str1 = self.link_strs[inv_link_type]
+        link_str2 = self.link_strs[link_type]
+        for linked_element, nodes in relations.items():
+            main_node.add_link(linked_element, link_str1, inv_link_type)
+            for node in nodes:
+                node.add_link(linked_element, link_str2, link_type)
+
+    def get_node_graph(self, node: str):
+        """!
+        get relashionship links from some ros2 node
+        """
+        name, namespace = rcu.split_full_name(node)
+        newMain = NodeElement(
+            name,
+            namespace,
+            type=ElementType.MAIN,
+            brackets=self.brackets[ElementType.MAIN],
+        )
+        main_hash = hash(newMain)
+
+        if main_hash in self.mainNodes:
+            return
+        self.mainNodes[main_hash] = newMain
+
+        elements = self.get_actions(node)
+
+        action_clients_data = {
+            action: rcu.get_action_related_nodes(action.full_name(), clients=True)
+            for action in elements["action_servers"]
+        }
+        action_clients = {
+            k: self.nodes_from_data(v) for k, v in action_clients_data.items()
+        }
+        action_servers_data = {
+            action: rcu.get_action_related_nodes(action.full_name(), clients=False)
+            for action in elements["action_client"]
+        }
+        action_servers = {
+            k: self.nodes_from_data(v) for k, v in action_servers_data.items()
+        }
+        subscribers = self.dummy.get_subscriber_names_and_types_by_node(name, namespace)
+        publishers = self.dummy.get_publisher_names_and_types_by_node(name, namespace)
+        services_server = self.dummy.get_service_names_and_types_by_node(
+            name, namespace
+        )
+        services_client = self.dummy.get_client_names_and_types_by_node(name, namespace)
+
+        topics_subscribers = self.get_topics_related_nodes(
+            subscribers, subscribers=True
+        )
+        topics_publishers = self.get_topics_related_nodes(publishers, subscribers=False)
+        service_clients = self.get_services_related_nodes(services_server, clients=True)
+        service_servers = self.get_services_related_nodes(
+            services_client, clients=False
+        )
+
+        self.create_links(
+            main_node=newMain,
+            relations=topics_subscribers,
+            link_type=LinkType.TOPIC_SUBSCRIBER,
+        )
+        self.create_links(
+            main_node=newMain,
+            relations=topics_publishers,
+            link_type=LinkType.TOPIC_PUBLISHER,
+        )
+        self.create_links(
+            main_node=newMain,
+            relations=service_clients,
+            link_type=LinkType.SERVICE_CLIENT,
+        )
+        self.create_links(
+            main_node=newMain,
+            relations=service_servers,
+            link_type=LinkType.SERVICE_SERVER,
+        )
+        self.create_links(
+            main_node=newMain,
+            relations=action_clients,
+            link_type=LinkType.ACTION_CLIENT,
+        )
+        self.create_links(
+            main_node=newMain,
+            relations=action_servers,
+            link_type=LinkType.ACTION_SERVER,
+        )
+
+    def get_nodes_mermaid(
+        self, nodes: Dict[int, NodeElement]
+    ) -> Tuple[str, Dict[LinkType, List[str]]]:
+        """!
+            get mermaid graph description from a node and
+            its relationships whit other elements
+        """
+        nodes_list = [str(val) for val in nodes.values()]
+        nodes_mermaid = "\n".join(nodes_list)
+
+        links_mermaid = {
+            name: reduce(
+                lambda mermaid_lines, node: mermaid_lines + node.get_links_str(name),
+                nodes.values(),
+                list(),
+            )
+            for name in LinkType
+        }
+        return nodes_mermaid, links_mermaid
+
+    def get_mermaid(self) -> Tuple[str, Tuple[Tuple[int, int]]]:
+        """!
+            get mermaid graph description from all requested nodes
+            and concatenate it
+        """
+        main_style, str_main_links = self.get_nodes_mermaid(self.mainNodes)
+        nodes_style, str_nodes_links = self.get_nodes_mermaid(self.nodes)
+
+        topics_str = list_ros_element_2_list_str(self.topics.values())
+        services_str = list_ros_element_2_list_str(self.services.values())
+        actions_str = list_ros_element_2_list_str(self.actions.values())
+        topics_style = "\n".join(topics_str)
+        services_style = "\n".join(services_str)
+        actions_style = "\n".join(actions_str)
+
+        all_links = {
+            name: str_main_links[name] + str_nodes_links[name] for name in LinkType
+        }
+
+        num_topic_publisher_links = [0, len(all_links[LinkType.TOPIC_PUBLISHER])]
+        num_topic_subscriber_links = [
+            num_topic_publisher_links[1],
+            len(all_links[LinkType.TOPIC_SUBSCRIBER]) + num_topic_publisher_links[1],
+        ]
+        num_service_server_links = [
+            num_topic_subscriber_links[1],
+            len(all_links[LinkType.SERVICE_SERVER]) + num_topic_subscriber_links[1],
+        ]
+        num_service_client_links = [
+            num_service_server_links[1],
+            len(all_links[LinkType.SERVICE_CLIENT]) + num_service_server_links[1],
+        ]
+        num_action_server_links = [
+            num_service_client_links[1],
+            len(all_links[LinkType.ACTION_SERVER]) + num_service_client_links[1],
+        ]
+        num_action_client_links = [
+            num_action_server_links[1],
+            len(all_links[LinkType.ACTION_CLIENT]) + num_action_server_links[1],
+        ]
+
+        links_ranges = {
+            LinkType.TOPIC_PUBLISHER: num_topic_publisher_links,
+            LinkType.TOPIC_SUBSCRIBER: num_topic_subscriber_links,
+            LinkType.SERVICE_SERVER: num_service_server_links,
+            LinkType.SERVICE_CLIENT: num_service_client_links,
+            LinkType.ACTION_SERVER: num_action_server_links,
+            LinkType.ACTION_CLIENT: num_action_client_links,
+        }
+
+        mermaid_graph = [
+            main_style,
+            nodes_style,
+            topics_style,
+            services_style,
+            actions_style,
+            "\n".join(all_links[LinkType.TOPIC_PUBLISHER]),
+            "\n".join(all_links[LinkType.TOPIC_SUBSCRIBER]),
+            "\n".join(all_links[LinkType.SERVICE_SERVER]),
+            "\n".join(all_links[LinkType.SERVICE_CLIENT]),
+            "\n".join(all_links[LinkType.ACTION_SERVER]),
+            "\n".join(all_links[LinkType.ACTION_CLIENT]),
+        ]
+        mermaid_str = "\n".join(mermaid_graph)
+        return mermaid_str, links_ranges
 
 
 def is_not_in_blacklist(element: Tuple[str, str], blacklist: List[str]) -> bool:
@@ -111,327 +464,3 @@ def is_not_in_blacklist(element: Tuple[str, str], blacklist: List[str]) -> bool:
         if e in element[0]:
             return False
     return True
-
-
-def filter_topics(topic: Tuple[str, str]) -> bool:
-    """! To filter undesired topics
-    @param topic tuple(name, type)
-    @return False if the topic is not desired
-    """
-    exclude = (
-        "/parameter_events",
-        "/rosout",
-        "/tf",
-        "/cascade_lifecycle_activations",
-        "/cascade_lifecycle_states",
-        "",
-    )
-
-    blacklist = ("/transition_event", "/_action")
-
-    if topic[0] in exclude:
-        return False
-
-    return is_not_in_blacklist(topic, blacklist)
-
-
-def get_topics_related_nodes(
-    topics: List[ElementNameTypes], subscribers: bool
-) -> ElementRelatedNodes:
-    """!
-    Get publishers or subcribers nodes for the specified topics
-
-    @param topics (list[tuple(name, types list)]) List of topics with names and type
-    @param publishers (bool) get publishers or subscribers nodes
-
-    @return dict {topic_name: {type: str, nodes: [nodes_names]}}
-    """
-    topics_and_nodes = {
-        topic[0]: {"type": "<br>".join(topic[1]), "nodes": []}
-        for topic in filter(filter_topics, topics)
-    }
-    topics_names = topics_and_nodes.keys()
-
-    get_endpoints_function = (
-        dummy.get_publishers_info_by_topic
-        if subscribers
-        else dummy.get_subscriptions_info_by_topic
-    )
-
-    for topic in topics_names:
-        endpoints = get_endpoints_function(topic)
-        topics_and_nodes[topic]["nodes"] = [
-            join_name_and_namespace(endpoint.node_name, endpoint.node_namespace)
-            for endpoint in endpoints
-        ]
-
-    return topics_and_nodes
-
-
-def get_services_related_nodes(
-    services: List[ElementNameTypes], clients: bool
-) -> ElementRelatedNodes:
-    """! Get servers or clients nodes for the specified services
-    @param services list of tuple(name: str, types: list)
-    @param clients, True for get clients names, false for server names
-    @return dictonary with structure {service_name: {"type": type, "nodes": client or server nodes names list}}
-    """
-
-    blacklist = (
-        "/change_state",
-        "/describe_parameters",
-        "/get_available_states",
-        "/get_available_transitions",
-        "/get_parameter_types",
-        "/get_parameters",
-        "/get_state",
-        "/get_transition_graph",
-        "/list_parameters",
-        "/set_parameters",
-        "/set_parameters_atomically",
-        "/_action",
-    )
-    filter_services = partial(is_not_in_blacklist, blacklist=blacklist)
-    services_and_nodes = {
-        service[0]: {"type": "<br>".join(service[1]), "nodes": []}
-        for service in filter(filter_services, services)
-    }
-
-    services_names = services_and_nodes.keys()
-    nodes_list = dummy.get_node_names_and_namespaces()
-
-    get_services_function = (
-        dummy.get_client_names_and_types_by_node
-        if clients
-        else dummy.get_service_names_and_types_by_node
-    )
-
-    for node in nodes_list:
-
-        services = tuple(map(lambda x: x[0], get_services_function(*node)))
-        filtered_services = tuple(
-            filter((lambda service: service in services_names), services)
-        )
-
-        for service in filtered_services:
-            services_and_nodes[service]["nodes"].append(join_name_and_namespace(*node))
-
-    return services_and_nodes
-
-
-def get_actions_related_nodes(
-    actions: Tuple[ElementNameTypes], clients: bool
-) -> ElementRelatedNodes:
-    """!
-    Get clients or servers nodes for the specified action
-
-    @param actions  tuples of tuples(name, type)
-    @param clients  get client or server nodes
-
-    @return dict {action_name: [nodes_names]}
-    """
-
-    pattern = ("Action clients:", "Action servers:")
-    aux_file = "actions.txt"
-    filter_command = (
-        between_patterns(pattern, aux_file)
-        if clients
-        else after_pattern(pattern[1], aux_file)
-    ) + " | tr -d '[:blank:]'"
-
-    actions_and_nodes = {
-        action[0]: {"type": action[1], "nodes": []} for action in actions
-    }
-    actions_names = actions_and_nodes.keys()
-    for action in actions_names:
-        actions_and_nodes[action]["nodes"] = tuple(
-            get_clean_lines(
-                f"ros2 action info {action} >> {aux_file} && {filter_command} && rm {aux_file}"
-            )
-        )
-
-    return actions_and_nodes
-
-
-def mermaid_topics(
-    node: str, topics: ElementRelatedNodes, subscribers: bool
-) -> Tuple[str, int]:
-    """! Construct the mermaid description to add topics to the graph
-    @param node, main node name
-    @param topics, {topic_name: {type: str, nodes: [nodes_names]}} dictionary
-    @param subscribers, link subscribers or publishers nodes
-
-    @return mermaid_topic_description list of lines with mermaid description for linked topics
-    @return links_count, number of links
-    """
-    mermaid_topic_description = []
-    links_count = 0
-    for topic, topic_info in topics.items():
-        n_publishers = len(topic_info["nodes"])
-        links_count += 1 + n_publishers
-
-        style = "topic" if n_publishers else "bugged"
-        topic_node = f"{topic}([{topic}<br>{topic_info['type']}]):::{style}"
-
-        if subscribers:
-            topic_node += f" --> {node}"
-            mermaid_topic_description.append(topic_node)
-            mermaid_topic_description.extend(
-                [f"{node}:::node --> {topic}" for node in topic_info["nodes"]]
-            )
-
-        else:
-            topic_node = f"{node} --> " + topic_node
-            mermaid_topic_description.append(topic_node)
-            mermaid_topic_description.extend(
-                [f"{topic} --> {node}:::node" for node in topic_info["nodes"]]
-            )
-
-    return mermaid_topic_description, links_count
-
-
-def mermaid_services(
-    node: str, services: ElementRelatedNodes, clients: bool
-) -> Tuple[str, int]:
-    """! Construct the mermaid description to add services to the graph
-    @param node, main node name
-    @param services, {service_name: {type: str, nodes: [nodes_names]}} dictionary
-    @param clients, link clients or servers nodes
-
-    @return mermaid_topic_description list of lines with mermaid description for linked services
-    @return links_count, number of links
-    """
-    mermaid_service_description = []
-    links_count = 0
-    for service, service_info in services.items():
-        n_clients = len(service_info["nodes"])
-        links_count += 1 + n_clients
-
-        style = "service" if n_clients else "bugged"
-        service_node = f"{service}[/{service}<br>{service_info['type']}\]:::{style}"
-
-        if clients:
-            service_node = f"{node} o-.-o " + service_node
-            mermaid_service_description.append(service_node)
-            mermaid_service_description.extend(
-                [f"{service} <-.-> {node}:::node" for node in service_info["nodes"]]
-            )
-        else:
-            service_node = service_node + f" <-.-> {node}"
-            mermaid_service_description.append(service_node)
-            mermaid_service_description.extend(
-                [f"{node}:::node  o-.-o {service}" for node in service_info["nodes"]]
-            )
-
-    return mermaid_service_description, links_count
-
-
-def mermaid_actions(
-    node: str, actions: ElementRelatedNodes, clients: bool
-) -> Tuple[str, int]:
-    """! Construct the mermaid description to add actions to the graph
-    @param node, main node name
-    @param actions, {action_name: {type: str, nodes: [nodes_names]}} dictionary
-    @param subscribers, link clients or servers nodes
-
-    @return mermaid_topic_description list of lines with mermaid description for linked actions
-    @return links_count, number of links
-    """
-    mermaid_action_description = []
-    links_count = 0
-    for action, action_info in actions.items():
-
-        n_clients = len(action_info["nodes"])
-        links_count += 1 + n_clients
-
-        style = "action" if n_clients else "bugged"
-
-        action_node = (
-            action + "{{" + action + "<br>" + action_info["type"] + "}}:::" + style
-        )
-
-        if clients:
-            action_node = f"{node} <==> " + action_node
-            mermaid_action_description.append(action_node)
-            mermaid_action_description.extend(
-                [f"{action} o==o {node}:::node" for node in action_info["nodes"]]
-            )
-        else:
-            action_node += f" o==o {node}"
-            mermaid_action_description.append(action_node)
-            mermaid_action_description.extend(
-                [f"{node}:::node <==> {action}" for node in action_info["nodes"]]
-            )
-    return mermaid_action_description, links_count
-
-
-def get_node_graph(node, links_count):
-
-    patterns = {
-        "action_servers": ("Action Servers:", "Action Clients:"),
-        "action_client": ("Action Clients:",),
-    }
-
-    subprocess.check_output(f"ros2 node info {node} >> node_info.txt", shell=True)
-    elements = {
-        k: get_node_info_block(pattern, file_name="node_info.txt")
-        for k, pattern in patterns.items()
-    }
-    subprocess.check_output("rm node_info.txt", shell=True)
-    action_clients = get_actions_related_nodes(elements["action_servers"], clients=True)
-    action_servers = get_actions_related_nodes(elements["action_client"], clients=False)
-
-    namespace_name = node.split("/")
-    name = namespace_name[-1]
-    namespace = "/".join(namespace_name[:-1])
-    if namespace == "":
-        namespace = "/"
-    name_and_namespace = (name, namespace)
-
-    subscribers = dummy.get_subscriber_names_and_types_by_node(*name_and_namespace)
-    publishers = dummy.get_publisher_names_and_types_by_node(*name_and_namespace)
-    services_server = dummy.get_service_names_and_types_by_node(*name_and_namespace)
-    services_client = dummy.get_client_names_and_types_by_node(*name_and_namespace)
-
-    topics_subscribers = get_topics_related_nodes(subscribers, subscribers=True)
-    topics_publishers = get_topics_related_nodes(publishers, subscribers=False)
-    service_clients = get_services_related_nodes(services_server, clients=True)
-    service_servers = get_services_related_nodes(services_client, clients=False)
-
-    mermaid_graph_description, links_count_subs = mermaid_topics(
-        node, topics_subscribers, subscribers=True
-    )
-    links_count += links_count_subs
-    mermaid_list, links_count_pubs = mermaid_topics(
-        node, topics_publishers, subscribers=False
-    )
-    mermaid_graph_description.extend(mermaid_list)
-    links_count += links_count_pubs
-
-    mermaid_list, links_count_sclients = mermaid_services(
-        node, service_clients, clients=True
-    )
-    mermaid_graph_description.extend(mermaid_list)
-    links_count += links_count_sclients
-
-    mermaid_list, links_count_sserver = mermaid_services(
-        node, service_servers, clients=False
-    )
-    mermaid_graph_description.extend(mermaid_list)
-    links_count += links_count_sserver
-
-    start_action_links = links_count
-    mermaid_list, links_count_aclients = mermaid_actions(
-        node, action_clients, clients=False
-    )
-    mermaid_graph_description.extend(mermaid_list)
-    links_count += links_count_aclients
-    mermaid_list, links_count_aserver = mermaid_actions(
-        node, action_servers, clients=True
-    )
-    mermaid_graph_description.extend(mermaid_list)
-    links_count += links_count_aserver
-
-    action_links = list(range(start_action_links, links_count))
-
-    return mermaid_graph_description, action_links, links_count
