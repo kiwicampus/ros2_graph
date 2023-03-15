@@ -76,7 +76,7 @@ class GraphGenerator:
             type=ElementType.ACTION,
             brackets=self.brackets[ElementType.ACTION],
         )
-        if new_action in self.to_ignore["actions"]:
+        if new_action.full_name() in self.to_ignore["actions"]:
             return None
         return self.new_no_node(new_action, self.actions)
 
@@ -152,7 +152,7 @@ class GraphGenerator:
             brackets=self.brackets[ElementType.NODE],
         )
 
-        if new_node.full_name in self.to_ignore["nodes"]:
+        if new_node.full_name() in self.to_ignore["nodes"]:
             return None
 
         node_hash = hash(new_node)

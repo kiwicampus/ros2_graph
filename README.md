@@ -210,9 +210,9 @@ links_style:
 display_keys: True
 ignore:
   nodes:
-  - ""
+    - "/Graph_generator"
   topics:
-    - "/parameter_events",
+    - "/parameter_events"
     - "/rosout"
     - "/tf"
     - "/cascade_lifecycle_activations"
