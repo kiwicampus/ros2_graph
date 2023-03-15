@@ -51,6 +51,8 @@ class GraphGenerator:
         self.link_strs = style_config["links_str"]
         self.brackets = style_config["shapes"]
 
+        self.to_ignore = style_config["to_ignore"]
+
     def new_no_node(
         self, new_element: NoNodeElement, elemt_dict: Dict[int, NoNodeElement]
     ) -> NoNodeElement:
@@ -74,6 +76,8 @@ class GraphGenerator:
             type=ElementType.ACTION,
             brackets=self.brackets[ElementType.ACTION],
         )
+        if new_action in self.to_ignore["actions"]:
+            return None
         return self.new_no_node(new_action, self.actions)
 
     def actions_tuple(self, actions_data: Tuple[Tuple[str]]) -> Tuple[NoNodeElement]:
@@ -82,7 +86,8 @@ class GraphGenerator:
         @param actions_data actions info in (name, namespace, ros_type) format
         @return a tuple of NoNodeElement action objects
         """
-        return tuple(self.new_action(*data) for data in actions_data)
+        actions = (self.new_action(*data) for data in actions_data)
+        return tuple(action for action in actions if action is not None)
 
     def new_topic(self, name: str, namespace: str, ros_type: str) -> NoNodeElement:
         """! Initialize a NoNodeElement topic object form a string tuple (name, namespace, ros_type) or return the already existing action
@@ -139,12 +144,17 @@ class GraphGenerator:
         @param data a tuple (name, namespace)
         @return the NodeElement object
         """
+
         new_node = NodeElement(
             name,
             namespace,
             type=ElementType.NODE,
             brackets=self.brackets[ElementType.NODE],
         )
+
+        if new_node.full_name in self.to_ignore["nodes"]:
+            return None
+
         node_hash = hash(new_node)
         if node_hash in self.mainNodes:
             return self.mainNodes[node_hash]
@@ -158,28 +168,45 @@ class GraphGenerator:
         @param nodes_data: nodes info in (name, namespace) format
         @return a tuple of NodeElement objects
         """
-        return tuple((self.new_node(*node) for node in nodes_data))
+        nodes = (self.new_node(*node) for node in nodes_data)
+        return tuple((node for node in nodes if node is not None))
 
     def filter_topics(self, topic: Tuple[str, str]) -> bool:
         """! To filter undesired topics
         @param topic tuple(name, type)
         @return False if the topic is not desired
         """
-        exclude = [
-            "/parameter_events",
-            "/rosout",
-            "/tf",
-            "/cascade_lifecycle_activations",
-            "/cascade_lifecycle_states",
-            "",
-        ]
-
         blacklist = ("/transition_event", "/_action")
 
-        if topic[0] in exclude:
+        if topic[0] in self.to_ignore["topics"]:
             return False
 
         return is_not_in_blacklist(topic, blacklist)
+
+    def filter_services(self, service: Tuple[str, str]) -> bool:
+        """! To filter undesired topics
+        @param service tuple(name, type)
+        @return False if the service is not desired
+        """
+        blacklist = (
+            "/change_state",
+            "/describe_parameters",
+            "/get_available_states",
+            "/get_available_transitions",
+            "/get_parameter_types",
+            "/get_parameters",
+            "/get_state",
+            "/get_transition_graph",
+            "/list_parameters",
+            "/set_parameters",
+            "/set_parameters_atomically",
+            "/_action",
+        )
+
+        if service[0] in self.to_ignore["services"]:
+            return False
+
+        return is_not_in_blacklist(service, blacklist)
 
     def get_topics_related_nodes(
         self, topics: List[ElementNameTypes], subscribers: bool
@@ -206,10 +233,12 @@ class GraphGenerator:
             topicObj = self.new_topic(name, namespace, ros_type)
             endpoints = get_endpoints_function(topic[0])
 
-            nodes = [
+            new_nodes = (
                 self.new_node(endpoint.node_name, endpoint.node_namespace)
                 for endpoint in endpoints
-            ]
+            )
+
+            nodes = [node for node in new_nodes if node is not None]
             topics_and_nodes[topicObj] = nodes
 
         return topics_and_nodes
@@ -223,31 +252,15 @@ class GraphGenerator:
         @return dictonary with services and related nodes
         """
 
-        blacklist = [
-            "/change_state",
-            "/describe_parameters",
-            "/get_available_states",
-            "/get_available_transitions",
-            "/get_parameter_types",
-            "/get_parameters",
-            "/get_state",
-            "/get_transition_graph",
-            "/list_parameters",
-            "/set_parameters",
-            "/set_parameters_atomically",
-            "/_action",
-        ]
-
         get_services_function = (
             self.dummy.get_client_names_and_types_by_node
             if clients
             else self.dummy.get_service_names_and_types_by_node
         )
 
-        filter_services = partial(is_not_in_blacklist, blacklist=blacklist)
         services_and_nodes = {
             service[0]: {"type": "<br>".join(service[1]), "nodes": []}
-            for service in filter(filter_services, services)
+            for service in filter(self.filter_services, services)
         }
 
         services_names = services_and_nodes.keys()
@@ -259,7 +272,9 @@ class GraphGenerator:
                 filter((lambda service: service in services_names), services)
             )
             for service in filtered_services:
-                services_and_nodes[service]["nodes"].append(self.new_node(*node))
+                new_node = self.new_node(*node)
+                if new_node is not None:
+                    services_and_nodes[service]["nodes"].append(new_node)
 
         services_and_nodes_obj = {}
         for service, sub_dict in services_and_nodes.items():
