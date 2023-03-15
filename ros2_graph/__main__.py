@@ -83,8 +83,12 @@ def get_style(style_file: str = None):
         LinkType.TOPIC_SUBSCRIBER: links_style.get("topics_subscriber", None),
         LinkType.SERVICE_SERVER: links_style.get("services_server", None),
         LinkType.SERVICE_CLIENT: links_style.get("services_client", None),
-        LinkType.ACTION_SERVER: links_style.get("action_server", "fill:none,stroke:green;"),
-        LinkType.ACTION_CLIENT: links_style.get("action_client", "fill:none,stroke:green;"),
+        LinkType.ACTION_SERVER: links_style.get(
+            "action_server", "fill:none,stroke:green;"
+        ),
+        LinkType.ACTION_CLIENT: links_style.get(
+            "action_client", "fill:none,stroke:green;"
+        ),
     }
 
     style_settings = {
@@ -193,18 +197,19 @@ def main():
     # Add keys box links
     if style_config["display_keys"]:
         last_link = links_ranges[LinkType.ACTION_CLIENT][1]
-        if LinkType.TOPIC_PUBLISHER in links_numbers:
-            links_numbers[LinkType.TOPIC_PUBLISHER].append(last_link + 2)
-        if LinkType.TOPIC_SUBSCRIBER in links_numbers:
-            links_numbers[LinkType.TOPIC_SUBSCRIBER].append(last_link + 3)
-        if LinkType.SERVICE_SERVER in links_numbers:
-            links_numbers[LinkType.SERVICE_SERVER].append(last_link)
-        if LinkType.SERVICE_CLIENT in links_numbers:
-            links_numbers[LinkType.SERVICE_CLIENT].append(last_link + 1)
-        if LinkType.ACTION_SERVER in links_numbers:
-            links_numbers[LinkType.ACTION_SERVER].append(last_link + 4)
-        if LinkType.ACTION_CLIENT in links_numbers:
-            links_numbers[LinkType.ACTION_CLIENT].append(last_link + 5)
+        key_box_order = [
+            LinkType.SERVICE_SERVER,
+            LinkType.SERVICE_CLIENT,
+            LinkType.TOPIC_PUBLISHER,
+            LinkType.TOPIC_SUBSCRIBER,
+            LinkType.ACTION_SERVER,
+            LinkType.ACTION_CLIENT,
+        ]
+
+        # Add style for the key box links
+        for i, link_type in enumerate(key_box_order):
+            if link_type in links_numbers:
+                links_numbers[link_type].append(last_link + i)
 
     links_styles = "\n".join(
         [
