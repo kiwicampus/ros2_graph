@@ -20,6 +20,7 @@ from os import remove
 from typing import Dict
 import yaml
 
+
 from .graph_generator import GraphGenerator
 from .ros_element import ElementType, LinkType
 
@@ -126,6 +127,7 @@ def main():
         default="console",
         type=str,
     )
+
     parser.add_argument(
         "--styleConfig",
         dest="style_config",
@@ -133,12 +135,15 @@ def main():
         default=None,
         type=str,
     )
+
     args = parser.parse_args()
 
     nodes = args.nodes
     out_file, aux_out_type = splitext(args.out_file)
     out_type = "console"
+
     style_config = get_style(args.style_config)
+
 
     # use file extension as default type
     if aux_out_type != "":
@@ -155,6 +160,7 @@ def main():
         raise Exception("Output file is missing")
 
     graph_generator = GraphGenerator(style_config)
+
 
     for node in nodes:
         graph_generator.get_node_graph(node)
@@ -261,6 +267,7 @@ def main():
         return
 
     with open(out_file + ".md", "a", encoding="UTF-8") as file:
+
         file.write(mermaid_graph)
 
     # Save .md file
