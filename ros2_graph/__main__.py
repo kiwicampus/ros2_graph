@@ -92,6 +92,8 @@ def get_style(style_file: str = None):
         ),
     }
 
+    to_ignore["nodes"] = to_ignore.get("nodes", ["/Graph_generator"])
+
     to_ignore["topics"] = to_ignore.get(
         "topics",
         [
