@@ -172,11 +172,13 @@ class GraphGenerator:
         nodes = (self.new_node(*node) for node in nodes_data)
         return tuple((node for node in nodes if node is not None))
 
-    def not_match(self, r, string):
+    def not_match(self, r, topic_info : Tuple[str, List[str]]):
         """
         Return True if the string do not match with the regular expresion
+        @param r: compiled regex expresion
+        @param topic_info: tuple (name, type)
         """
-        return not r.match(string)
+        return not r.match(topic_info[0])
 
     def get_topics_related_nodes(
         self, topics: List[ElementNameTypes], subscribers: bool
@@ -199,7 +201,7 @@ class GraphGenerator:
         topics_and_nodes = {}
         blacklist = "|".join(self.to_ignore["topics"])
         r = re.compile(blacklist)
-        not_match_partial = partial(self.not_match, r=r)
+        not_match_partial = partial(self.not_match, r)
         
         for topic in filter(not_match_partial, topics):
             name, namespace = rcu.split_full_name(topic[0])
@@ -234,7 +236,7 @@ class GraphGenerator:
 
         blacklist = "|".join(self.to_ignore["services"])
         r = re.compile(blacklist)
-        not_match_partial = partial(self.not_match, r=r)
+        not_match_partial = partial(self.not_match, r)
 
         services_and_nodes = {
             service[0]: {"type": "<br>".join(service[1]), "nodes": []}
