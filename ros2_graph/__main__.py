@@ -93,18 +93,30 @@ def get_style(style_file: str = None):
     }
 
     to_ignore["nodes"] = to_ignore.get("nodes", ["/Graph_generator"])
+    to_ignore["services"] = to_ignore.get("services", []) + [ 
+        ".*/change_state",
+        ".*/describe_parameters",
+        ".*/get_available_states",
+        ".*/get_available_transitions",
+        ".*/get_parameter_types",
+        ".*/get_parameters",
+        ".*/get_state",
+        ".*/get_transition_graph",
+        ".*/list_parameters",
+        ".*/set_parameters",
+        ".*/set_parameters_atomically",
+        ".*/_action",
+    ]
 
-    to_ignore["topics"] = to_ignore.get(
-        "topics",
-        [
+    to_ignore["topics"] = to_ignore.get("topics",[]) + [
             "/parameter_events",
             "/rosout",
             "/tf",
             "/cascade_lifecycle_activations",
             "/cascade_lifecycle_states",
-            "",
-        ],
-    )
+            ".*/transition_event",
+            ".*/_action",
+        ]
 
     style_settings = {
         "shapes": shapes_dict,

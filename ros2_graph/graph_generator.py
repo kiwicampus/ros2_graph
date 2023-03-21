@@ -16,6 +16,7 @@
 from functools import partial
 from typing import Dict, List, Tuple
 
+import re
 import rclpy
 from rclpy.node import Node
 
@@ -171,42 +172,11 @@ class GraphGenerator:
         nodes = (self.new_node(*node) for node in nodes_data)
         return tuple((node for node in nodes if node is not None))
 
-    def filter_topics(self, topic: Tuple[str, str]) -> bool:
-        """! To filter undesired topics
-        @param topic tuple(name, type)
-        @return False if the topic is not desired
+    def not_match(self, r, string):
         """
-        blacklist = ("/transition_event", "/_action")
-
-        if topic[0] in self.to_ignore["topics"]:
-            return False
-
-        return is_not_in_blacklist(topic, blacklist)
-
-    def filter_services(self, service: Tuple[str, str]) -> bool:
-        """! To filter undesired topics
-        @param service tuple(name, type)
-        @return False if the service is not desired
+        Return True if the string do not match with the regular expresion
         """
-        blacklist = (
-            "/change_state",
-            "/describe_parameters",
-            "/get_available_states",
-            "/get_available_transitions",
-            "/get_parameter_types",
-            "/get_parameters",
-            "/get_state",
-            "/get_transition_graph",
-            "/list_parameters",
-            "/set_parameters",
-            "/set_parameters_atomically",
-            "/_action",
-        )
-
-        if service[0] in self.to_ignore["services"]:
-            return False
-
-        return is_not_in_blacklist(service, blacklist)
+        return not r.match(string)
 
     def get_topics_related_nodes(
         self, topics: List[ElementNameTypes], subscribers: bool
@@ -227,7 +197,11 @@ class GraphGenerator:
         )
 
         topics_and_nodes = {}
-        for topic in filter(self.filter_topics, topics):
+        blacklist = "|".join(self.to_ignore["topics"])
+        r = re.compile(blacklist)
+        not_match_partial = partial(self.not_match, r=r)
+        
+        for topic in filter(not_match_partial, topics):
             name, namespace = rcu.split_full_name(topic[0])
             ros_type = "<br>".join(topic[1])
             topicObj = self.new_topic(name, namespace, ros_type)
@@ -258,9 +232,13 @@ class GraphGenerator:
             else self.dummy.get_service_names_and_types_by_node
         )
 
+        blacklist = "|".join(self.to_ignore["services"])
+        r = re.compile(blacklist)
+        not_match_partial = partial(self.not_match, r=r)
+
         services_and_nodes = {
             service[0]: {"type": "<br>".join(service[1]), "nodes": []}
-            for service in filter(self.filter_services, services)
+            for service in filter(not_match_partial, services)
         }
 
         services_names = services_and_nodes.keys()
@@ -468,14 +446,3 @@ class GraphGenerator:
         ]
         mermaid_str = "\n".join(mermaid_graph)
         return mermaid_str, links_ranges
-
-
-def is_not_in_blacklist(element: Tuple[str, str], blacklist: List[str]) -> bool:
-    """! Return true if the element name do not contains a fragment in the balcklist
-    @param element (name, type) tuple
-    @param exclude not desired elemts names list
-    """
-    for e in blacklist:
-        if e in element[0]:
-            return False
-    return True

@@ -212,16 +212,8 @@ ignore:
   nodes:
     - "/Graph_generator"
   topics:
-    - "/parameter_events"
-    - "/rosout"
-    - "/tf"
-    - "/cascade_lifecycle_activations"
-    - "/cascade_lifecycle_states"
-    - ""
   services:
-    - ""
   actions:
-    - ""
 ```
 
-Use the `ignore` field to don not include some node, topic, service or action in your graph.
+Use the `ignore` field to don not include some node, topic, service or action in your graph, [regular expressions](https://docs.python.org/3/library/re.html) are supported.
