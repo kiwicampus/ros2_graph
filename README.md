@@ -208,4 +208,12 @@ links_style:
   action_server: fill:none,stroke:green;
   action_client: fill:none,stroke:green;
 display_keys: True
+ignore:
+  nodes:
+    - "/Graph_generator"
+  topics:
+  services:
+  actions:
 ```
+
+Use the `ignore` field to don not include some node, topic, service or action in your graph, [regular expressions](https://docs.python.org/3/library/re.html) are supported.

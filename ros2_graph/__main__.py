@@ -17,8 +17,8 @@ import argparse
 import subprocess
 from os.path import splitext
 from os import remove
-from typing import Dict
 import yaml
+from collections import defaultdict
 
 
 from .graph_generator import GraphGenerator
@@ -34,13 +34,14 @@ def get_style(style_file: str = None):
     if style_file:
         with open(style_file, encoding="UTF-8") as f:
             yaml_data = f.read()
-            style_dict = yaml.load(yaml_data)
+            style_dict = yaml.load(yaml_data, Loader=yaml.Loader)
 
     shapes = style_dict.get("shapes", {})
     colors = style_dict.get("colors", {})
     links_display = style_dict.get("links_display", {})
     links_style = style_dict.get("links_style", {})
     display_keys = style_dict.get("display_keys", True)
+    to_ignore = style_dict.get("ignore", defaultdict(lambda: []))
 
     shapes_dict = {
         ElementType.MAIN: shapes.get("main", ["[", "]"]),
@@ -92,6 +93,32 @@ def get_style(style_file: str = None):
         ),
     }
 
+    to_ignore["nodes"] = to_ignore.get("nodes", ["/Graph_generator"])
+    to_ignore["services"] = to_ignore.get("services", []) + [ 
+        ".*/change_state",
+        ".*/describe_parameters",
+        ".*/get_available_states",
+        ".*/get_available_transitions",
+        ".*/get_parameter_types",
+        ".*/get_parameters",
+        ".*/get_state",
+        ".*/get_transition_graph",
+        ".*/list_parameters",
+        ".*/set_parameters",
+        ".*/set_parameters_atomically",
+        ".*/_action",
+    ]
+
+    to_ignore["topics"] = to_ignore.get("topics",[]) + [
+            "/parameter_events",
+            "/rosout",
+            "/tf",
+            "/cascade_lifecycle_activations",
+            "/cascade_lifecycle_states",
+            ".*/transition_event",
+            ".*/_action",
+        ]
+
     style_settings = {
         "shapes": shapes_dict,
         "colors": colors_dict,
@@ -99,6 +126,7 @@ def get_style(style_file: str = None):
         "links_str": link_strs,
         "links_style": link_style,
         "display_keys": display_keys,
+        "to_ignore": to_ignore,
     }
 
     return style_settings
