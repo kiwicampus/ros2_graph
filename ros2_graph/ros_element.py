@@ -15,6 +15,7 @@
 
 from dataclasses import dataclass
 from enum import Enum
+import os
 from typing import List, Dict
 
 
@@ -85,7 +86,7 @@ class RosElement:
         """
         if self.namespace is None:
             return self.name
-        return self.namespace + self.name
+        return os.path.join(self.namespace, self.name)
 
 
 def list_ros_element_2_list_str(elements: List[RosElement]) -> List[str]:
