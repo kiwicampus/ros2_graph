@@ -81,7 +81,6 @@ def get_name_namespace_type(line: str) -> Tuple[str]:
     """
     full_name, type = line.split(":")
     name, namespace = split_full_name(full_name)
-    name = "/" + name
     return name, namespace, type
 
 

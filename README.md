@@ -206,6 +206,7 @@ links_style:
   action_server: fill:none,stroke:green;
   action_client: fill:none,stroke:green;
 display_keys: True
+group_namespaces: True
 ignore:
   nodes:
     - "/Graph_generator"
