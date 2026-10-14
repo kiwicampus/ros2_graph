@@ -372,8 +372,7 @@ class GraphGenerator:
         self, nodes: Dict[int, NodeElement]
     ) -> Dict[LinkType, List[str]]:
         """!
-        get mermaid graph description from a node and
-        its relationships whit other elements
+        get mermaid links of some nodes with other elements
         """
         return {
             name: reduce(
