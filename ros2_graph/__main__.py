@@ -16,6 +16,7 @@
 
 import argparse
 import argcomplete
+import os
 import subprocess
 from os.path import splitext
 from os import remove
@@ -140,8 +141,10 @@ def running_nodes(**kwargs):
     """!
     argcomplete completer listing the currently running ros2 nodes
     """
+    # ros2 uses argcomplete too: drop the completion env vars so it lists nodes
+    env = {k: v for k, v in os.environ.items() if not k.startswith("_ARGCOMPLETE")}
     return subprocess.run(
-        ["ros2", "node", "list"], capture_output=True, text=True
+        ["ros2", "node", "list"], capture_output=True, text=True, env=env
     ).stdout.split()
 
 
