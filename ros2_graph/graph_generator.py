@@ -38,7 +38,7 @@ ElementRelatedNodes = Dict[str, RelatedNodes]
 class GraphGenerator:
     def __init__(self, style_config: Dict[str, any]):
         """!
-            style_config: style .yaml values as dictionary
+        style_config: style .yaml values as dictionary
         """
         rclpy.init()
         self.dummy = Node("Graph_generator")
@@ -77,7 +77,10 @@ class GraphGenerator:
             type=ElementType.ACTION,
             brackets=self.brackets[ElementType.ACTION],
         )
-        if new_action.full_name() in self.to_ignore["actions"]:
+        if any(
+            re.match(pattern, new_action.full_name())
+            for pattern in self.to_ignore.get("actions") or []
+        ):
             return None
         return self.new_no_node(new_action, self.actions)
 
@@ -172,7 +175,7 @@ class GraphGenerator:
         nodes = (self.new_node(*node) for node in nodes_data)
         return tuple((node for node in nodes if node is not None))
 
-    def not_match(self, r, topic_info : Tuple[str, List[str]]):
+    def not_match(self, r, topic_info: Tuple[str, List[str]]):
         """
         Return True if the string do not match with the regular expresion
         @param r: compiled regex expresion
@@ -202,7 +205,7 @@ class GraphGenerator:
         blacklist = "|".join(self.to_ignore["topics"])
         r = re.compile(blacklist)
         not_match_partial = partial(self.not_match, r)
-        
+
         for topic in filter(not_match_partial, topics):
             name, namespace = rcu.split_full_name(topic[0])
             ros_type = "<br>".join(topic[1])
@@ -367,8 +370,8 @@ class GraphGenerator:
         self, nodes: Dict[int, NodeElement]
     ) -> Tuple[str, Dict[LinkType, List[str]]]:
         """!
-            get mermaid graph description from a node and
-            its relationships whit other elements
+        get mermaid graph description from a node and
+        its relationships whit other elements
         """
         nodes_list = [str(val) for val in nodes.values()]
         nodes_mermaid = "\n".join(nodes_list)
@@ -385,8 +388,8 @@ class GraphGenerator:
 
     def get_mermaid(self) -> Tuple[str, Tuple[Tuple[int, int]]]:
         """!
-            get mermaid graph description from all requested nodes
-            and concatenate it
+        get mermaid graph description from all requested nodes
+        and concatenate it
         """
         main_style, str_main_links = self.get_nodes_mermaid(self.mainNodes)
         nodes_style, str_nodes_links = self.get_nodes_mermaid(self.nodes)

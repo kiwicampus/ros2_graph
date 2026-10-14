@@ -215,3 +215,9 @@ ignore:
 ```
 
 Use the `ignore` field to exclude specific nodes, topics, services, or actions from your graph. [Regular expressions](https://docs.python.org/3/library/re.html) are supported.
+
+To hide all topics, services, or actions at once, use the `--hideTopics`, `--hideServices`, or `--hideActions` flags:
+
+```bash
+ros2_graph /turtlesim --hideServices --hideActions
+```

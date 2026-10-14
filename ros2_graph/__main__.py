@@ -94,7 +94,7 @@ def get_style(style_file: str = None):
     }
 
     to_ignore["nodes"] = to_ignore.get("nodes", ["/Graph_generator"])
-    to_ignore["services"] = to_ignore.get("services", []) + [ 
+    to_ignore["services"] = to_ignore.get("services", []) + [
         ".*/change_state",
         ".*/describe_parameters",
         ".*/get_available_states",
@@ -109,15 +109,15 @@ def get_style(style_file: str = None):
         ".*/_action",
     ]
 
-    to_ignore["topics"] = to_ignore.get("topics",[]) + [
-            "/parameter_events",
-            "/rosout",
-            "/tf",
-            "/cascade_lifecycle_activations",
-            "/cascade_lifecycle_states",
-            ".*/transition_event",
-            ".*/_action",
-        ]
+    to_ignore["topics"] = to_ignore.get("topics", []) + [
+        "/parameter_events",
+        "/rosout",
+        "/tf",
+        "/cascade_lifecycle_activations",
+        "/cascade_lifecycle_states",
+        ".*/transition_event",
+        ".*/_action",
+    ]
 
     style_settings = {
         "shapes": shapes_dict,
@@ -164,6 +164,14 @@ def main():
         type=str,
     )
 
+    for element in ("topics", "services", "actions"):
+        parser.add_argument(
+            f"--hide{element.capitalize()}",
+            dest=f"hide_{element}",
+            help=f"exclude all {element} from the graph",
+            action="store_true",
+        )
+
     args = parser.parse_args()
 
     nodes = args.nodes
@@ -171,7 +179,9 @@ def main():
     out_type = "console"
 
     style_config = get_style(args.style_config)
-
+    for element in ("topics", "services", "actions"):
+        if getattr(args, f"hide_{element}"):
+            style_config["to_ignore"][element] = [".*"]
 
     # use file extension as default type
     if aux_out_type != "":
@@ -188,7 +198,6 @@ def main():
         raise Exception("Output file is missing")
 
     graph_generator = GraphGenerator(style_config)
-
 
     for node in nodes:
         graph_generator.get_node_graph(node)
