@@ -41,6 +41,7 @@ def get_style(style_file: str = None):
     links_display = style_dict.get("links_display", {})
     links_style = style_dict.get("links_style", {})
     display_keys = style_dict.get("display_keys", True)
+    group_namespaces = style_dict.get("group_namespaces", True)
     to_ignore = style_dict.get("ignore", defaultdict(lambda: []))
 
     shapes_dict = {
@@ -94,7 +95,7 @@ def get_style(style_file: str = None):
     }
 
     to_ignore["nodes"] = to_ignore.get("nodes", ["/Graph_generator"])
-    to_ignore["services"] = to_ignore.get("services", []) + [ 
+    to_ignore["services"] = to_ignore.get("services", []) + [
         ".*/change_state",
         ".*/describe_parameters",
         ".*/get_available_states",
@@ -109,15 +110,15 @@ def get_style(style_file: str = None):
         ".*/_action",
     ]
 
-    to_ignore["topics"] = to_ignore.get("topics",[]) + [
-            "/parameter_events",
-            "/rosout",
-            "/tf",
-            "/cascade_lifecycle_activations",
-            "/cascade_lifecycle_states",
-            ".*/transition_event",
-            ".*/_action",
-        ]
+    to_ignore["topics"] = to_ignore.get("topics", []) + [
+        "/parameter_events",
+        "/rosout",
+        "/tf",
+        "/cascade_lifecycle_activations",
+        "/cascade_lifecycle_states",
+        ".*/transition_event",
+        ".*/_action",
+    ]
 
     style_settings = {
         "shapes": shapes_dict,
@@ -126,6 +127,7 @@ def get_style(style_file: str = None):
         "links_str": link_strs,
         "links_style": link_style,
         "display_keys": display_keys,
+        "group_namespaces": group_namespaces,
         "to_ignore": to_ignore,
     }
 
@@ -172,7 +174,6 @@ def main():
 
     style_config = get_style(args.style_config)
 
-
     # use file extension as default type
     if aux_out_type != "":
         out_type = aux_out_type
@@ -188,7 +189,6 @@ def main():
         raise Exception("Output file is missing")
 
     graph_generator = GraphGenerator(style_config)
-
 
     for node in nodes:
         graph_generator.get_node_graph(node)
