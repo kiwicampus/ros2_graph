@@ -380,28 +380,43 @@ class GraphGenerator:
             for name in LinkType
         }
 
-    def namespaces_mermaid(self, elements: List[RosElement], namespace="/") -> str:
+    def namespaces_mermaid(self, elements: List[RosElement]) -> str:
         """!
-        get mermaid declarations of elements, nested in a subgraph per namespace
-        @param elements: elements inside namespace
+        get mermaid declarations of elements, nested in a subgraph per namespace.
+        A node named as a namespace (e.g. /robot and /robot/cmd) goes inside it
+        @param elements: elements to draw
+        """
+        namespaces = {e.namespace for e in elements}
+
+        def group(e: RosElement) -> str:
+            name = e.full_name()
+            is_namespace = any(
+                ns == name or ns.startswith(name + "/") for ns in namespaces
+            )
+            return name if isinstance(e, NodeElement) and is_namespace else e.namespace
+
+        return self.groups_mermaid([(group(e), e) for e in elements])
+
+    def groups_mermaid(
+        self, groups: List[Tuple[str, RosElement]], namespace="/"
+    ) -> str:
+        """!
+        get mermaid declarations of (group, element) pairs inside namespace
+        @param groups: (group namespace, element) pairs inside namespace
         @param namespace: namespace being drawn
         """
-        lines = [str(e) for e in elements if e.namespace == namespace]
+        lines = [str(e) for g, e in groups if g == namespace]
         prefix = namespace.rstrip("/") + "/"
         children = dict.fromkeys(
-            prefix + e.namespace[len(prefix) :].split("/")[0]
-            for e in elements
-            if e.namespace != namespace
+            prefix + g[len(prefix) :].split("/")[0] for g, _ in groups if g != namespace
         )
         for child in children:
             inside = [
-                e
-                for e in elements
-                if e.namespace == child or e.namespace.startswith(child + "/")
+                (g, e) for g, e in groups if g == child or g.startswith(child + "/")
             ]
             lines += [
                 f'subgraph ns{child}["{child}"]',
-                self.namespaces_mermaid(inside, child),
+                self.groups_mermaid(inside, child),
                 "end",
             ]
         return "\n".join(lines)
