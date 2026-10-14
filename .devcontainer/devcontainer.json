@@ -3,6 +3,7 @@
 	"dockerComposeFile": "docker-compose.yml",
 	"service": "ros2_graph",
 	"workspaceFolder": "/workspace",
+	"postCreateCommand": "sudo pip3 install --break-system-packages -e /workspace",
 	"runArgs": [],
 	"settings": {
 		"terminal.integrated.automationShell.linux": "/bin/bash",
