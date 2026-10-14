@@ -1,0 +1,29 @@
+# version: '3.8'
+services:
+  ros2_graph:
+    build:
+      context: ../
+      dockerfile: .devcontainer/Dockerfile
+    container_name: ros2_graph
+    user: "ada"
+    working_dir: /home/ada
+    network_mode: host
+
+    init: true
+    privileged: true
+
+    environment:
+      - DISPLAY=$DISPLAY
+      - QT_X11_NO_MITSHM=1
+      - UDEV=1
+
+    volumes:
+      # Update this to wherever you want VS Code to mount the folder of your project
+      - ..:/workspace
+
+    security_opt:
+      - seccomp:unconfined
+
+    stdin_open: true
+    tty: true
+    command: "/bin/bash"
