@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+# PYTHON_ARGCOMPLETE_OK
 # Copyright 2023 Kiwicampus Inc.
 #
 # Licensed under GNU GENERAL PUBLIC, version 3 (the "License");
@@ -14,6 +15,7 @@
 # limitations under the License.
 
 import argparse
+import argcomplete
 import subprocess
 from os.path import splitext
 from os import remove
@@ -134,13 +136,22 @@ def get_style(style_file: str = None):
     return style_settings
 
 
+def running_nodes(**kwargs):
+    """!
+    argcomplete completer listing the currently running ros2 nodes
+    """
+    return subprocess.run(
+        ["ros2", "node", "list"], capture_output=True, text=True
+    ).stdout.split()
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Create mermaid graphs from your ros2 nodes"
     )
     parser.add_argument(
         "nodes", metavar="/node", type=str, nargs="+", help="main nodes of your graph"
-    )
+    ).completer = running_nodes
     parser.add_argument(
         "-o",
         "--out_file",
@@ -166,6 +177,7 @@ def main():
         type=str,
     )
 
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
 
     nodes = args.nodes
