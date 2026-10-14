@@ -41,6 +41,7 @@ def get_style(style_file: str = None):
     links_display = style_dict.get("links_display", {})
     links_style = style_dict.get("links_style", {})
     display_keys = style_dict.get("display_keys", True)
+    group_namespaces = style_dict.get("group_namespaces", True)
     to_ignore = style_dict.get("ignore", defaultdict(lambda: []))
 
     shapes_dict = {
@@ -126,6 +127,7 @@ def get_style(style_file: str = None):
         "links_str": link_strs,
         "links_style": link_style,
         "display_keys": display_keys,
+        "group_namespaces": group_namespaces,
         "to_ignore": to_ignore,
     }
 

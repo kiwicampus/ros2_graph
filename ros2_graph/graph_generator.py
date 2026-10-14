@@ -25,6 +25,7 @@ from .ros_element import (
     LinkType,
     NoNodeElement,
     NodeElement,
+    RosElement,
     list_ros_element_2_list_str,
 )
 from . import ros_cli_utils as rcu
@@ -53,6 +54,7 @@ class GraphGenerator:
         self.brackets = style_config["shapes"]
 
         self.to_ignore = style_config["to_ignore"]
+        self.group_namespaces = style_config["group_namespaces"]
 
     def new_no_node(
         self, new_element: NoNodeElement, elemt_dict: Dict[int, NoNodeElement]
@@ -366,17 +368,14 @@ class GraphGenerator:
             link_type=LinkType.ACTION_SERVER,
         )
 
-    def get_nodes_mermaid(
+    def get_nodes_links(
         self, nodes: Dict[int, NodeElement]
-    ) -> Tuple[str, Dict[LinkType, List[str]]]:
+    ) -> Dict[LinkType, List[str]]:
         """!
         get mermaid graph description from a node and
         its relationships whit other elements
         """
-        nodes_list = [str(val) for val in nodes.values()]
-        nodes_mermaid = "\n".join(nodes_list)
-
-        links_mermaid = {
+        return {
             name: reduce(
                 lambda mermaid_lines, node: mermaid_lines + node.get_links_str(name),
                 nodes.values(),
@@ -384,22 +383,68 @@ class GraphGenerator:
             )
             for name in LinkType
         }
-        return nodes_mermaid, links_mermaid
+
+    def namespaces_mermaid(self, elements: List[RosElement]) -> str:
+        """!
+        get mermaid declarations of elements, nested in a subgraph per namespace.
+        A node named as a namespace (e.g. /robot and /robot/cmd) goes inside it
+        @param elements: elements to draw
+        """
+        namespaces = {e.namespace for e in elements}
+
+        def group(e: RosElement) -> str:
+            name = e.full_name()
+            is_namespace = any(
+                ns == name or ns.startswith(name + "/") for ns in namespaces
+            )
+            return name if isinstance(e, NodeElement) and is_namespace else e.namespace
+
+        return self.groups_mermaid([(group(e), e) for e in elements])
+
+    def groups_mermaid(
+        self, groups: List[Tuple[str, RosElement]], namespace="/"
+    ) -> str:
+        """!
+        get mermaid declarations of (group, element) pairs inside namespace
+        @param groups: (group namespace, element) pairs inside namespace
+        @param namespace: namespace being drawn
+        """
+        lines = [str(e) for g, e in groups if g == namespace]
+        prefix = namespace.rstrip("/") + "/"
+        children = dict.fromkeys(
+            prefix + g[len(prefix) :].split("/")[0] for g, _ in groups if g != namespace
+        )
+        for child in children:
+            inside = [
+                (g, e) for g, e in groups if g == child or g.startswith(child + "/")
+            ]
+            lines += [
+                f'subgraph ns{child}["{child}"]',
+                self.groups_mermaid(inside, child),
+                "end",
+            ]
+        return "\n".join(lines)
 
     def get_mermaid(self) -> Tuple[str, Tuple[Tuple[int, int]]]:
         """!
         get mermaid graph description from all requested nodes
         and concatenate it
         """
-        main_style, str_main_links = self.get_nodes_mermaid(self.mainNodes)
-        nodes_style, str_nodes_links = self.get_nodes_mermaid(self.nodes)
+        str_main_links = self.get_nodes_links(self.mainNodes)
+        str_nodes_links = self.get_nodes_links(self.nodes)
 
-        topics_str = list_ros_element_2_list_str(self.topics.values())
-        services_str = list_ros_element_2_list_str(self.services.values())
-        actions_str = list_ros_element_2_list_str(self.actions.values())
-        topics_style = "\n".join(topics_str)
-        services_style = "\n".join(services_str)
-        actions_style = "\n".join(actions_str)
+        elements = [
+            *self.mainNodes.values(),
+            *self.nodes.values(),
+            *self.topics.values(),
+            *self.services.values(),
+            *self.actions.values(),
+        ]
+        elements_mermaid = (
+            self.namespaces_mermaid(elements)
+            if self.group_namespaces
+            else "\n".join(list_ros_element_2_list_str(elements))
+        )
 
         all_links = {
             name: str_main_links[name] + str_nodes_links[name] for name in LinkType
@@ -437,11 +482,7 @@ class GraphGenerator:
         }
 
         mermaid_graph = [
-            main_style,
-            nodes_style,
-            topics_style,
-            services_style,
-            actions_style,
+            elements_mermaid,
             "\n".join(all_links[LinkType.TOPIC_PUBLISHER]),
             "\n".join(all_links[LinkType.TOPIC_SUBSCRIBER]),
             "\n".join(all_links[LinkType.SERVICE_SERVER]),
