@@ -17,6 +17,14 @@ ROS 2 must be installed beforehand (tested on the Humble distribution).
 pip install ros2-graph
 ```
 
+To enable tab completion of running node names (like `ros2 node info <tab>`), add this to your `~/.bashrc`:
+
+```bash
+eval "$(register-python-argcomplete3 ros2_graph)"
+```
+
+Use `register-python-argcomplete` instead if your distribution does not ship the `3` suffixed script.
+
 To export the diagram as an image, install npm and [mermaid-cli](https://github.com/mermaid-js/mermaid-cli) on your computer:
 
 ```bash

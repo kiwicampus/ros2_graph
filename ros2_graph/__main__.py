@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+# PYTHON_ARGCOMPLETE_OK
 # Copyright 2023 Kiwicampus Inc.
 #
 # Licensed under GNU GENERAL PUBLIC, version 3 (the "License");
@@ -14,6 +15,7 @@
 # limitations under the License.
 
 import argparse
+import argcomplete
 import subprocess
 from os.path import splitext
 from os import remove
@@ -94,7 +96,7 @@ def get_style(style_file: str = None):
     }
 
     to_ignore["nodes"] = to_ignore.get("nodes", ["/Graph_generator"])
-    to_ignore["services"] = to_ignore.get("services", []) + [ 
+    to_ignore["services"] = to_ignore.get("services", []) + [
         ".*/change_state",
         ".*/describe_parameters",
         ".*/get_available_states",
@@ -109,15 +111,15 @@ def get_style(style_file: str = None):
         ".*/_action",
     ]
 
-    to_ignore["topics"] = to_ignore.get("topics",[]) + [
-            "/parameter_events",
-            "/rosout",
-            "/tf",
-            "/cascade_lifecycle_activations",
-            "/cascade_lifecycle_states",
-            ".*/transition_event",
-            ".*/_action",
-        ]
+    to_ignore["topics"] = to_ignore.get("topics", []) + [
+        "/parameter_events",
+        "/rosout",
+        "/tf",
+        "/cascade_lifecycle_activations",
+        "/cascade_lifecycle_states",
+        ".*/transition_event",
+        ".*/_action",
+    ]
 
     style_settings = {
         "shapes": shapes_dict,
@@ -132,13 +134,22 @@ def get_style(style_file: str = None):
     return style_settings
 
 
+def running_nodes(**kwargs):
+    """!
+    argcomplete completer listing the currently running ros2 nodes
+    """
+    return subprocess.run(
+        ["ros2", "node", "list"], capture_output=True, text=True
+    ).stdout.split()
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Create mermaid graphs from your ros2 nodes"
     )
     parser.add_argument(
         "nodes", metavar="/node", type=str, nargs="+", help="main nodes of your graph"
-    )
+    ).completer = running_nodes
     parser.add_argument(
         "-o",
         "--out_file",
@@ -164,6 +175,7 @@ def main():
         type=str,
     )
 
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
 
     nodes = args.nodes
@@ -171,7 +183,6 @@ def main():
     out_type = "console"
 
     style_config = get_style(args.style_config)
-
 
     # use file extension as default type
     if aux_out_type != "":
@@ -188,7 +199,6 @@ def main():
         raise Exception("Output file is missing")
 
     graph_generator = GraphGenerator(style_config)
-
 
     for node in nodes:
         graph_generator.get_node_graph(node)
