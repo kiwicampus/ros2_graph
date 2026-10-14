@@ -71,9 +71,9 @@ class LinkType(Enum):
 
 @dataclass
 class RosElement:
-    """! 
-        RosElement Class store basic information of ROS elements: 
-        Nodes, topics, services and actions
+    """!
+    RosElement Class store basic information of ROS elements:
+    Nodes, topics, services and actions
     """
 
     name: str
@@ -99,13 +99,13 @@ def list_ros_element_2_list_str(elements: List[RosElement]) -> List[str]:
 @dataclass
 class NoNodeElement(RosElement):
     """!
-        NoNodeElement Class store aditional information of ROS elements 
-        that are not nodes.
-        Atributes:
-            ros_type: ros topic, service or action type
-            from_connected: bool, has at least one publisher or server
-            to_connected: bool, has at least one subscriber or client
-            brackets: for mermaid diplay, default ("([", "])")
+    NoNodeElement Class store aditional information of ROS elements
+    that are not nodes.
+    Atributes:
+        ros_type: ros topic, service or action type
+        from_connected: bool, has at least one publisher or server
+        to_connected: bool, has at least one subscriber or client
+        brackets: for mermaid diplay, default ("([", "])")
     """
 
     ros_type: str
@@ -131,11 +131,11 @@ class NoNodeElement(RosElement):
 @dataclass
 class Link:
     """!
-        contains the relashionship information from a ROS node
-        to some other ROS element
-        Atributes:
-            linked_element: NoNodeElement object
-            link_str: for mermaid display
+    contains the relashionship information from a ROS node
+    to some other ROS element
+    Atributes:
+        linked_element: NoNodeElement object
+        link_str: for mermaid display
     """
 
     linked_element: NoNodeElement
@@ -157,9 +157,9 @@ class Link:
 @dataclass
 class NodeElement(RosElement):
     """!
-        NoNodeElement Class store aditional information of ROS nodes.
-        Atributes:
-            brackets: for mermaid diplay
+    NoNodeElement Class store aditional information of ROS nodes.
+    Atributes:
+        brackets: for mermaid diplay
     """
 
     brackets: List[str]
@@ -171,11 +171,11 @@ class NodeElement(RosElement):
         self, linked_element: NoNodeElement, link_str: str, link_type: LinkType
     ):
         """!
-         Add a relashion ship  with a no node element,
-         but only if it doesn't already exist
-         @param linked_element: a topic, sevice or action
-         @param link_str: for mermaid display
-         @param link_type: which kind of relashionship is
+        Add a relashion ship  with a no node element,
+        but only if it doesn't already exist
+        @param linked_element: a topic, sevice or action
+        @param link_str: for mermaid display
+        @param link_type: which kind of relashionship is
         """
         link = Link(linked_element=linked_element, link_str=link_str)
         link_hash = hash(link)
@@ -195,9 +195,11 @@ class NodeElement(RosElement):
         name = self.full_name()
         index = which.value
         linksStr = [
-            name + " " + link.link_str + " " + str(link)
-            if index % 2
-            else str(link) + " " + link.link_str + " " + name
+            (
+                name + " " + link.link_str + " " + str(link)
+                if index % 2
+                else str(link) + " " + link.link_str + " " + name
+            )
             for link in self.links[index].values()
         ]
         return linksStr

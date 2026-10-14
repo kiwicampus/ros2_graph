@@ -1,5 +1,4 @@
 import setuptools
-from pip._internal.req import parse_requirements
 
 from ros2_graph import __version__
 
@@ -16,12 +15,8 @@ with open("README.md") as readme:
     )
     long_description = "".join(lines)
 
-install_reqs = list(parse_requirements("requirements.txt", session=False))
-
-try:
-    requirements = [str(ir.req) for ir in install_reqs]
-except:
-    requirements = [str(ir.requirement) for ir in install_reqs]
+with open("requirements.txt") as requirements_file:
+    requirements = requirements_file.read().split()
 
 setuptools.setup(
     name="ros2_graph",
@@ -32,5 +27,5 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     packages=["ros2_graph"],
     install_requires=requirements,
-    entry_points={"console_scripts": ["ros2_graph = ros2_graph:__main__.main"]},
+    entry_points={"console_scripts": ["ros2_graph = ros2_graph.__main__:main"]},
 )

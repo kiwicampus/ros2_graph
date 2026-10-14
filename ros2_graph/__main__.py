@@ -16,6 +16,7 @@
 
 import argparse
 import argcomplete
+import os
 import subprocess
 from os.path import splitext
 from os import remove
@@ -140,8 +141,10 @@ def running_nodes(**kwargs):
     """!
     argcomplete completer listing the currently running ros2 nodes
     """
+    # ros2 uses argcomplete too: drop the completion env vars so it lists nodes
+    env = {k: v for k, v in os.environ.items() if not k.startswith("_ARGCOMPLETE")}
     return subprocess.run(
-        ["ros2", "node", "list"], capture_output=True, text=True
+        ["ros2", "node", "list"], capture_output=True, text=True, env=env
     ).stdout.split()
 
 
@@ -177,6 +180,14 @@ def main():
         type=str,
     )
 
+    for element in ("topics", "services", "actions"):
+        parser.add_argument(
+            f"--hide{element.capitalize()}",
+            dest=f"hide_{element}",
+            help=f"exclude all {element} from the graph",
+            action="store_true",
+        )
+
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
 
@@ -185,6 +196,9 @@ def main():
     out_type = "console"
 
     style_config = get_style(args.style_config)
+    for element in ("topics", "services", "actions"):
+        if getattr(args, f"hide_{element}"):
+            style_config["to_ignore"][element] = [".*"]
 
     # use file extension as default type
     if aux_out_type != "":
@@ -209,6 +223,44 @@ def main():
 
     links_str = style_config["links_str"]
     shapes = style_config["shapes"]
+    # (element, link type, line) for each link shown in the keys box
+    key_links = [
+        (
+            "services",
+            LinkType.SERVICE_SERVER,
+            f"node1 {links_str[LinkType.SERVICE_SERVER]}|to server| service{shapes[ElementType.SERVICE][0]}Service<br>service/Type{shapes[ElementType.SERVICE][1]}:::service",
+        ),
+        (
+            "services",
+            LinkType.SERVICE_CLIENT,
+            f"service {links_str[LinkType.SERVICE_CLIENT]}|to client| node2",
+        ),
+        (
+            "topics",
+            LinkType.TOPIC_PUBLISHER,
+            f"node1 {links_str[LinkType.TOPIC_PUBLISHER]}|publish| topic{shapes[ElementType.TOPIC][0]}Topic<br>topic/Type{shapes[ElementType.TOPIC][1]}:::topic",
+        ),
+        (
+            "topics",
+            LinkType.TOPIC_SUBSCRIBER,
+            f"topic {links_str[LinkType.TOPIC_SUBSCRIBER]}|subscribe| node2",
+        ),
+        (
+            "actions",
+            LinkType.ACTION_SERVER,
+            f"node1 {links_str[LinkType.ACTION_SERVER]}|to server| action{shapes[ElementType.ACTION][0]}/Action<br>action/Type/{shapes[ElementType.ACTION][1]}:::action",
+        ),
+        (
+            "actions",
+            LinkType.ACTION_CLIENT,
+            f"action {links_str[LinkType.ACTION_CLIENT]}|to client| node2",
+        ),
+    ]
+    key_links = [
+        (link_type, line)
+        for element, link_type, line in key_links
+        if not getattr(args, f"hide_{element}")
+    ]
     mermaid_convention = (
         "\n".join(
             [
@@ -220,12 +272,9 @@ def main():
                 "subgraph connection[<b><b/>]",
                 f"node1{shapes[ElementType.NODE][0]}node1{shapes[ElementType.NODE][1]}:::node",
                 f"node2{shapes[ElementType.NODE][0]}node2{shapes[ElementType.NODE][1]}:::node",
-                f"node1 {links_str[LinkType.SERVICE_SERVER]}|to server| service{shapes[ElementType.SERVICE][0]}Service<br>service/Type{shapes[ElementType.SERVICE][1]}:::service",
-                f"service {links_str[LinkType.SERVICE_CLIENT]}|to client| node2",
-                f"node1 {links_str[LinkType.TOPIC_PUBLISHER]}|publish| topic{shapes[ElementType.TOPIC][0]}Topic<br>topic/Type{shapes[ElementType.TOPIC][1]}:::topic",
-                f"topic {links_str[LinkType.TOPIC_SUBSCRIBER]}|subscribe| node2",
-                f"node1 {links_str[LinkType.ACTION_SERVER]}|to server| action{shapes[ElementType.ACTION][0]}/Action<br>action/Type/{shapes[ElementType.ACTION][1]}:::action",
-                f"action {links_str[LinkType.ACTION_CLIENT]}|to client| node2",
+            ]
+            + [line for _, line in key_links]
+            + [
                 "end",
                 "end",
             ]
@@ -243,17 +292,9 @@ def main():
     # Add keys box links
     if style_config["display_keys"]:
         last_link = links_ranges[LinkType.ACTION_CLIENT][1]
-        key_box_order = [
-            LinkType.SERVICE_SERVER,
-            LinkType.SERVICE_CLIENT,
-            LinkType.TOPIC_PUBLISHER,
-            LinkType.TOPIC_SUBSCRIBER,
-            LinkType.ACTION_SERVER,
-            LinkType.ACTION_CLIENT,
-        ]
 
         # Add style for the key box links
-        for i, link_type in enumerate(key_box_order):
+        for i, (link_type, _) in enumerate(key_links):
             if link_type in links_numbers:
                 links_numbers[link_type].append(last_link + i)
 

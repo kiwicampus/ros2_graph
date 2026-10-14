@@ -79,7 +79,10 @@ class GraphGenerator:
             type=ElementType.ACTION,
             brackets=self.brackets[ElementType.ACTION],
         )
-        if new_action.full_name() in self.to_ignore["actions"]:
+        if any(
+            re.match(pattern, new_action.full_name())
+            for pattern in self.to_ignore.get("actions") or []
+        ):
             return None
         return self.new_no_node(new_action, self.actions)
 
