@@ -23,7 +23,7 @@ services:
       - ..:/workspace
       # X11 socket + auth cookie so GUI apps (turtlesim, rviz) can open windows
       - /tmp/.X11-unix:/tmp/.X11-unix
-      - ${XAUTHORITY}:/tmp/.Xauthority:ro
+      - ${HOME}/.Xauthority-devcontainer:/tmp/.Xauthority:ro
 
     security_opt:
       - seccomp:unconfined

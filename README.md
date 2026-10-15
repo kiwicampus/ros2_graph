@@ -58,6 +58,8 @@ ros2_graph /turtlesim -o turtle_diagram --outputFormat png
 
 **Note:** Make sure to copy everything between ` ```mermaid ` and ` ``` `, including the markers themselves.
 
+Use `--hideTopics`, `--hideServices`, `--hideActions` to hide elements by type.
+
 GitHub supports Mermaid graphs. You can also view them in VS Code by installing the "bierner.markdown-mermaid" extension in your `devcontainer.json`.
 
 What about nodes that are closely related, such as range sensors? Don't worry—you can include as many nodes as you want:
@@ -69,52 +71,67 @@ ros2_graph node_1 node_2 … node_n
 Example:
 
 ```bash
-ros2_graph /turtlesim /teleop_turtle
+ros2_graph /turtlesim
 ```
 See an example graph:
 
 ```mermaid
 flowchart LR
-/turtlesim:::main
-/teleop_turtle:::node
-/turtle1cmd_vel([/turtle1cmd_vel<br>geometry_msgs/msg/Twist]):::topic
-/turtle1color_sensor([/turtle1color_sensor<br>turtlesim/msg/Color]):::bugged
-/turtle1pose([/turtle1pose<br>turtlesim/msg/Pose]):::bugged
-/clear[//clear<br>std_srvs/srv/Empty\]:::bugged
-/kill[//kill<br>turtlesim/srv/Kill\]:::bugged
-/reset[//reset<br>std_srvs/srv/Empty\]:::bugged
-/spawn[//spawn<br>turtlesim/srv/Spawn\]:::bugged
-/turtle1set_pen[//turtle1set_pen<br>turtlesim/srv/SetPen\]:::bugged
-/turtle1teleport_absolute[//turtle1teleport_absolute<br>turtlesim/srv/TeleportAbsolute\]:::bugged
-/turtle1teleport_relative[//turtle1teleport_relative<br>turtlesim/srv/TeleportRelative\]:::bugged
-/turtle1/rotate_absolute{{/turtle1/rotate_absolute<br>turtlesim/action/RotateAbsolute}}:::action
+
+/clear[/ /clear<br>std_srvs/srv/Empty \]:::bugged
+/kill[/ /kill<br>turtlesim/srv/Kill \]:::bugged
+/reset[/ /reset<br>std_srvs/srv/Empty \]:::bugged
+/spawn[/ /spawn<br>turtlesim/srv/Spawn \]:::bugged
+subgraph ns/turtlesim["/turtlesim"]
+/turtlesim[ /turtlesim ]:::main
+/turtlesim/get_type_description[/ /turtlesim/get_type_description<br>type_description_interfaces/srv/GetTypeDescription \]:::bugged
+end
+subgraph ns/teleop_turtle["/teleop_turtle"]
+/teleop_turtle[ /teleop_turtle ]:::main
+/teleop_turtle[ /teleop_turtle ]:::node
+/teleop_turtle/get_type_description[/ /teleop_turtle/get_type_description<br>type_description_interfaces/srv/GetTypeDescription \]:::bugged
+end
+subgraph ns/turtle1["/turtle1"]
+/turtle1/cmd_vel([ /turtle1/cmd_vel<br>geometry_msgs/msg/Twist ]):::topic
+/turtle1/color_sensor([ /turtle1/color_sensor<br>turtlesim/msg/Color ]):::bugged
+/turtle1/pose([ /turtle1/pose<br>turtlesim/msg/Pose ]):::bugged
+/turtle1/set_pen[/ /turtle1/set_pen<br>turtlesim/srv/SetPen \]:::bugged
+/turtle1/teleport_absolute[/ /turtle1/teleport_absolute<br>turtlesim/srv/TeleportAbsolute \]:::bugged
+/turtle1/teleport_relative[/ /turtle1/teleport_relative<br>turtlesim/srv/TeleportRelative \]:::bugged
+/turtle1/rotate_absolute{{ /turtle1/rotate_absolute<br>turtlesim/action/RotateAbsolute }}:::action
+end
+/turtle1/cmd_vel --> /turtlesim
+/turtlesim --> /turtle1/color_sensor
+/turtlesim --> /turtle1/pose
+/teleop_turtle --> /turtle1/cmd_vel
+/teleop_turtle --> /turtle1/cmd_vel
 /clear o-.-o /turtlesim
 /kill o-.-o /turtlesim
 /reset o-.-o /turtlesim
 /spawn o-.-o /turtlesim
-/turtle1set_pen o-.-o /turtlesim
-/turtle1teleport_absolute o-.-o /turtlesim
-/turtle1teleport_relative o-.-o /turtlesim
-/teleop_turtle <==> /turtle1/rotate_absolute
+/turtle1/set_pen o-.-o /turtlesim
+/turtle1/teleport_absolute o-.-o /turtlesim
+/turtle1/teleport_relative o-.-o /turtlesim
+/turtlesim/get_type_description o-.-o /turtlesim
+/teleop_turtle/get_type_description o-.-o /teleop_turtle
+
 /turtle1/rotate_absolute o==o /turtlesim
-/turtle1cmd_vel --> /turtlesim
-/turtlesim --> /turtle1color_sensor
-/turtlesim --> /turtle1pose
-/teleop_turtle --> /turtle1cmd_vel
+/teleop_turtle <==> /turtle1/rotate_absolute
+/teleop_turtle <==> /turtle1/rotate_absolute
 subgraph keys[<b>Keys<b/>]
 subgraph nodes[<b><b/>]
 topicb((No connected)):::bugged
-main_node:::main
+main_node[main]:::main
 end
 subgraph connection[<b><b/>]
-node1:::node
-node2:::node
-node1 o-. to server .-o service[/Service<br>service/Type\]:::service
-service <-. to client .-> node2
-node1 -- publish --> topic([Topic<br>topic/Type]):::topic
-topic -- subscribe --> node2
-node1 o== to server ==o action{{/Action<br>action/Type/}}:::action
-action <== to client ==> node2
+node1[node1]:::node
+node2[node2]:::node
+node1 o-.-o|to server| service[/Service<br>service/Type\]:::service
+service <-.->|to client| node2
+node1 -->|publish| topic([Topic<br>topic/Type]):::topic
+topic -->|subscribe| node2
+node1 o==o|to server| action{{/Action<br>action/Type/}}:::action
+action <==>|to client| node2
 end
 end
 classDef node opacity:0.9,fill:#2A0,stroke:#391,stroke-width:4px,color:#fff
@@ -126,49 +143,66 @@ classDef bugged opacity:0.9,fill:#933,stroke:#800,stroke-width:2px,color:#fff
 style keys opacity:0.15,fill:#FFF
 style nodes opacity:0.15,fill:#FFF
 style connection opacity:0.15,fill:#FFF
+linkStyle 14,21 fill:none,stroke:green;
+linkStyle 15,16,22 fill:none,stroke:green;
 ```
 ```
 flowchart LR
-/turtlesim:::main
-/teleop_turtle:::node
-/turtle1cmd_vel([/turtle1cmd_vel<br>geometry_msgs/msg/Twist]):::topic
-/turtle1color_sensor([/turtle1color_sensor<br>turtlesim/msg/Color]):::bugged
-/turtle1pose([/turtle1pose<br>turtlesim/msg/Pose]):::bugged
-/clear[//clear<br>std_srvs/srv/Empty\]:::bugged
-/kill[//kill<br>turtlesim/srv/Kill\]:::bugged
-/reset[//reset<br>std_srvs/srv/Empty\]:::bugged
-/spawn[//spawn<br>turtlesim/srv/Spawn\]:::bugged
-/turtle1set_pen[//turtle1set_pen<br>turtlesim/srv/SetPen\]:::bugged
-/turtle1teleport_absolute[//turtle1teleport_absolute<br>turtlesim/srv/TeleportAbsolute\]:::bugged
-/turtle1teleport_relative[//turtle1teleport_relative<br>turtlesim/srv/TeleportRelative\]:::bugged
-/turtle1/rotate_absolute{{/turtle1/rotate_absolute<br>turtlesim/action/RotateAbsolute}}:::action
+
+/clear[/ /clear<br>std_srvs/srv/Empty \]:::bugged
+/kill[/ /kill<br>turtlesim/srv/Kill \]:::bugged
+/reset[/ /reset<br>std_srvs/srv/Empty \]:::bugged
+/spawn[/ /spawn<br>turtlesim/srv/Spawn \]:::bugged
+subgraph ns/turtlesim["/turtlesim"]
+/turtlesim[ /turtlesim ]:::main
+/turtlesim/get_type_description[/ /turtlesim/get_type_description<br>type_description_interfaces/srv/GetTypeDescription \]:::bugged
+end
+subgraph ns/teleop_turtle["/teleop_turtle"]
+/teleop_turtle[ /teleop_turtle ]:::main
+/teleop_turtle[ /teleop_turtle ]:::node
+/teleop_turtle/get_type_description[/ /teleop_turtle/get_type_description<br>type_description_interfaces/srv/GetTypeDescription \]:::bugged
+end
+subgraph ns/turtle1["/turtle1"]
+/turtle1/cmd_vel([ /turtle1/cmd_vel<br>geometry_msgs/msg/Twist ]):::topic
+/turtle1/color_sensor([ /turtle1/color_sensor<br>turtlesim/msg/Color ]):::bugged
+/turtle1/pose([ /turtle1/pose<br>turtlesim/msg/Pose ]):::bugged
+/turtle1/set_pen[/ /turtle1/set_pen<br>turtlesim/srv/SetPen \]:::bugged
+/turtle1/teleport_absolute[/ /turtle1/teleport_absolute<br>turtlesim/srv/TeleportAbsolute \]:::bugged
+/turtle1/teleport_relative[/ /turtle1/teleport_relative<br>turtlesim/srv/TeleportRelative \]:::bugged
+/turtle1/rotate_absolute{{ /turtle1/rotate_absolute<br>turtlesim/action/RotateAbsolute }}:::action
+end
+/turtle1/cmd_vel --> /turtlesim
+/turtlesim --> /turtle1/color_sensor
+/turtlesim --> /turtle1/pose
+/teleop_turtle --> /turtle1/cmd_vel
+/teleop_turtle --> /turtle1/cmd_vel
 /clear o-.-o /turtlesim
 /kill o-.-o /turtlesim
 /reset o-.-o /turtlesim
 /spawn o-.-o /turtlesim
-/turtle1set_pen o-.-o /turtlesim
-/turtle1teleport_absolute o-.-o /turtlesim
-/turtle1teleport_relative o-.-o /turtlesim
-/teleop_turtle <==> /turtle1/rotate_absolute
+/turtle1/set_pen o-.-o /turtlesim
+/turtle1/teleport_absolute o-.-o /turtlesim
+/turtle1/teleport_relative o-.-o /turtlesim
+/turtlesim/get_type_description o-.-o /turtlesim
+/teleop_turtle/get_type_description o-.-o /teleop_turtle
+
 /turtle1/rotate_absolute o==o /turtlesim
-/turtle1cmd_vel --> /turtlesim
-/turtlesim --> /turtle1color_sensor
-/turtlesim --> /turtle1pose
-/teleop_turtle --> /turtle1cmd_vel
+/teleop_turtle <==> /turtle1/rotate_absolute
+/teleop_turtle <==> /turtle1/rotate_absolute
 subgraph keys[<b>Keys<b/>]
 subgraph nodes[<b><b/>]
 topicb((No connected)):::bugged
-main_node:::main_node
+main_node[main]:::main
 end
 subgraph connection[<b><b/>]
-node1:::node
-node2:::node
-node1 o-. to server .-o service[/Service<br>service/Type\]:::service
-service <-. to client .-> node2
-node1 -- publish --> topic([Topic<br>topic/Type]):::topic
-topic -- subscribe --> node2
-node1 o== to server ==o action{{/Action<br>action/Type/}}:::action
-action <== to client ==> node2
+node1[node1]:::node
+node2[node2]:::node
+node1 o-.-o|to server| service[/Service<br>service/Type\]:::service
+service <-.->|to client| node2
+node1 -->|publish| topic([Topic<br>topic/Type]):::topic
+topic -->|subscribe| node2
+node1 o==o|to server| action{{/Action<br>action/Type/}}:::action
+action <==>|to client| node2
 end
 end
 classDef node opacity:0.9,fill:#2A0,stroke:#391,stroke-width:4px,color:#fff
@@ -180,6 +214,8 @@ classDef bugged opacity:0.9,fill:#933,stroke:#800,stroke-width:2px,color:#fff
 style keys opacity:0.15,fill:#FFF
 style nodes opacity:0.15,fill:#FFF
 style connection opacity:0.15,fill:#FFF
+linkStyle 14,21 fill:none,stroke:green;
+linkStyle 15,16,22 fill:none,stroke:green;
 ```
 ## Custom style
 
